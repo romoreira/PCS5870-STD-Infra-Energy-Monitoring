@@ -457,4 +457,3 @@ Quando o repositório for liberado, utilize os scripts para conferir como a infr
 
 **🌱 PCS5870 — Sustentabilidade e Tecnologias Digitais · Escola Politécnica da USP**  
 **Atividade conduzida pelo Prof. Rodrigo Moreira · Supervisão: Profa. Tereza Cristina Melo de Brito Carvalho**
-
