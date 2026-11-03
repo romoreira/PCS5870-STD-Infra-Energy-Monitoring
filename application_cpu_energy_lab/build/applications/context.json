@@ -9,5 +9,6 @@
   "service_cidr": "10.96.0.0/16",
   "service_ip": "10.96.0.1",
   "kube_version": "1.35.10",
-  "sensor_candidates": []
+  "sensor_candidates": [],
+  "energy_backend": "estimated"
 }

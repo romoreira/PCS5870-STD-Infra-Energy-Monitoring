@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Application layer for vmteste: Kubernetes 1.35 / containerd / dual-stack.
 # Helm: kube-prometheus-stack 92.17.0, Kepler 0.12.0, Chaos Mesh 2.8.7.
-# Only real energy sensors. No automatic stress experiment is started.
+# Uses real sensors when available, otherwise official legacy Kepler local regression.
+# Workload/StressChaos target: default. No automatic stress experiment is started.
 set -Eeuo pipefail
 umask 077
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
@@ -9,6 +10,8 @@ BUILD_DIR="${APP_BUILD_DIR:-${SCRIPT_DIR}/build/applications}"
 CHECK_ONLY=0
 CREDENTIAL_MODE=''
 VERIFY_PID=''
+CPU_MODE=''
+ENERGY_BACKEND=''
 KPS_VERSION=92.17.0
 KEPLER_VERSION=0.12.0
 CHAOS_VERSION=2.8.7
@@ -35,13 +38,17 @@ trap 'on_error "$LINENO"' ERR
 
 usage() {
   cat <<'HELP'
-Usage: ./application_install.sh [--check | --credentials | --renew-chaos-token]
+Usage: ./application_install.sh [--check | --credentials | --renew-chaos-token | --diagnose-cpu | --test-cpu]
   --check   Check the existing cluster, hardware sensor candidates and prerequisites.
             Writes local diagnostic files, but does not install cluster resources.
   --credentials       Show current Grafana login and Chaos Dashboard token.
                       Automatically renew a missing or nearly expired token.
   --renew-chaos-token  Renew and show the Chaos token plus Grafana login.
                       These two modes do not reinstall or restart applications.
+  --diagnose-cpu       Observe native cgroup CPU, stress-worker placement and Prometheus.
+                      Does not start load. Run while the browser experiment is active.
+  --test-cpu           Run a bounded 20s direct control and 60s Chaos CPU experiment
+                      against ubuntu-test in default, with cgroup/Prometheus checks.
   --help    Show this help.
 
 Run on the Ubuntu VM as the regular ubuntu user with sudo access.
@@ -49,8 +56,8 @@ Requires the working cluster, kubectl, Helm 3, Python/PyYAML and OpenEBS Hostpat
 created by the infrastructure installer. Does not run kubeadm or restart containerd.
 Grafana uses dual-stack NodePort 30000; Chaos Dashboard uses NodePort 30001.
 SSH forwarding remains available. Cloud/host firewall rules are not changed.
-No synthetic meter or sensor-replacement power model is enabled. Kepler remains installed with
-zero scheduled Pods if the VM exposes no readable RAPL/hwmon energy sensors.
+Without readable energy sensors, official legacy local regression estimates pod energy.
+The same CPU Energy Lab dashboard labels estimates. The workload is in namespace default.
 HELP
 }
 
@@ -70,7 +77,7 @@ if get('get','namespace','kube-system')['metadata']['uid']!=state['cluster_uid']
 secret=get('-n','monitoring','get','secret','grafana-admin')
 user=base64.b64decode(secret['data']['admin-user']).decode()
 password=base64.b64decode(secret['data']['admin-password']).decode()
-account=get('-n','cpu-lab','get','serviceaccount','chaos-lab-manager')
+account=get('-n','default','get','serviceaccount','chaos-lab-manager')
 directory=root/'credentials';directory.mkdir(mode=0o700,exist_ok=True);directory.chmod(0o700)
 path=directory/'chaos-token.txt';token=path.read_text().strip() if path.exists() else ''
 def claims(value):
@@ -79,11 +86,11 @@ def claims(value):
 try:
     payload=claims(token)
     valid=(payload['exp']>time.time()+300 and
-           payload['sub']=='system:serviceaccount:cpu-lab:chaos-lab-manager' and
+           payload['sub']=='system:serviceaccount:default:chaos-lab-manager' and
            payload.get('kubernetes.io',{}).get('serviceaccount',{}).get('uid')==account['metadata']['uid'])
 except (ValueError,KeyError,IndexError,TypeError):valid=False
 if force or not valid:
-    token=subprocess.check_output(['kubectl','--request-timeout=15s','-n','cpu-lab','create','token',
+    token=subprocess.check_output(['kubectl','--request-timeout=15s','-n','default','create','token',
                                    'chaos-lab-manager','--duration=24h'],text=True).strip()
     if not token:sys.exit('Kubernetes returned an empty token.')
     payload=claims(token)
@@ -97,7 +104,7 @@ def save(name,value):
         if os.path.exists(tmp):os.unlink(tmp)
 save('grafana-user.txt',user);save('grafana-password.txt',password);save('chaos-token.txt',token)
 print('\nGRAFANA\nUsuario: '+user+'\nSenha: '+password)
-print('\nCHAOS MESH\nName: cpu-lab-manager\nToken:\n'+token)
+print('\nCHAOS MESH\nName: default-manager\nToken:\n'+token)
 if payload.get('exp'):
     print('Expira em (UTC): '+datetime.datetime.fromtimestamp(payload['exp'],datetime.timezone.utc).isoformat())
 print('\nCole o token inteiro no campo Token e clique Submit. O login no navegador continua sendo manual.')
@@ -165,6 +172,7 @@ state={'cluster_uid':uid,'node':name,'ipv4':v4,'ipv6':v6,'interface':iface,
        'api_host':url.hostname,'api_port':url.port or 443,'service_cidr':service_v4,
        'service_ip':service['spec']['clusterIP'],'kube_version':version,
        'sensor_candidates':json.loads((root/'sensor-candidates.json').read_text())}
+state['energy_backend']='real' if state['sensor_candidates'] else 'estimated'
 expected_ports={30000:('monitoring','grafana'),30001:('chaos-mesh','chaos-dashboard')}
 for svc in get('get','services','--all-namespaces')['items']:
     owner=(svc['metadata']['namespace'],svc['metadata']['name'])
@@ -179,25 +187,36 @@ old.write_text(json.dumps(state,indent=2)+'\n')
 print('Node:',name,'API:',url.hostname,url.port or 443,'Service CIDR:',service_v4)
 print('Readable real sensor candidates:',len(state['sensor_candidates']))
 if not state['sensor_candidates']:
-    print('REAL-ONLY MODE: CPU graphs will work; Kepler will have zero scheduled Pods and no watt readings.')
+    print('ESTIMATED MODE: official legacy local regression will estimate Ubuntu pod energy in CPU Energy Lab.')
 PY
-  read -r NODE_NAME NODE_INTERFACE SERVICE_CIDR SERVICE_IP SENSOR_STATE < <(
+  read -r NODE_NAME NODE_INTERFACE SERVICE_CIDR SERVICE_IP SENSOR_STATE ENERGY_BACKEND < <(
     python3 - "$BUILD_DIR/context.json" <<'PY'
 import json,sys
 d=json.load(open(sys.argv[1]))
 print(d['node'],d['interface'],d['service_cidr'],d['service_ip'],
-      'present' if d['sensor_candidates'] else 'absent')
+      'present' if d['sensor_candidates'] else 'absent',d['energy_backend'])
 PY
   )
   if ! ip -4 route get "$SERVICE_IP" >/dev/null 2>&1; then
     info "Host has no IPv4 route to Kubernetes Services; installation will add only ${SERVICE_CIDR} via ${NODE_INTERFACE}."
   fi
-  if kubectl -n cpu-lab get stresschaos -o json > "$BUILD_DIR/current-stress.json" 2>/dev/null; then
-    python3 - "$BUILD_DIR/current-stress.json" <<'PY'
+  if [[ "$ENERGY_BACKEND" == estimated && ! -r /sys/kernel/btf/vmlinux ]]; then
+    die 'Kernel BTF is unavailable; the legacy energy estimator needs eBPF kernel support.'
+  fi
+  if [[ -z "$CPU_MODE" ]]; then
+    for ns in default cpu-lab; do
+      if kubectl -n "$ns" get stresschaos -o json > "$BUILD_DIR/current-stress.json" 2>/dev/null; then
+        python3 - "$BUILD_DIR/current-stress.json" <<'PY_INNER'
 import json,sys
-items=json.load(open(sys.argv[1])).get('items',[])
-if items: sys.exit('Existing StressChaos experiments found in cpu-lab. Finish/remove them before reinstalling the applications.')
-PY
+for item in json.load(open(sys.argv[1])).get('items',[]):
+    status=item.get('status',{});conditions=status.get('conditions',[])
+    recovered=any(c['type']=='AllRecovered' and c['status']=='True' for c in conditions)
+    stopped=status.get('experiment',{}).get('desiredPhase')=='Stop' and not status.get('instances')
+    if not (recovered or stopped):
+        sys.exit('Finish the active StressChaos before updating: '+item['metadata']['namespace']+'/'+item['metadata']['name'])
+PY_INNER
+      fi
+    done
   fi
 }
 
@@ -209,6 +228,9 @@ prepare_charts() {
   fetch "https://charts.chaos-mesh.org/chaos-mesh-${CHAOS_VERSION}.tgz" "$BUILD_DIR/charts/chaos.tgz"
   helm pull oci://quay.io/sustainable_computing_io/charts/kepler --version "$KEPLER_VERSION" --destination "$BUILD_DIR/charts"
   mv "$BUILD_DIR/charts/kepler-${KEPLER_VERSION}.tgz" "$BUILD_DIR/charts/kepler.tgz"
+  if [[ "$ENERGY_BACKEND" == estimated ]]; then
+    fetch 'https://github.com/sustainable-computing-io/kepler-helm-chart/releases/download/kepler-0.6.2/kepler-0.6.2.tgz' "$BUILD_DIR/charts/kepler-estimated.tgz"
+  fi
   python3 - "$BUILD_DIR/charts" <<'PY'
 import hashlib,pathlib,sys
 root=pathlib.Path(sys.argv[1])
@@ -219,6 +241,9 @@ for name,want in expected.items():
     got=hashlib.sha256((root/name).read_bytes()).hexdigest()
     if got!=want: sys.exit('Chart checksum mismatch: '+name)
     print('SHA-256 OK:',name)
+legacy=root/'kepler-estimated.tgz'
+if legacy.exists() and hashlib.sha256(legacy.read_bytes()).hexdigest()!='c76689bd87ca37a0101bc85f13ea31e6d569c5c9a7d69d00c5f08db3d7e72296':
+    sys.exit('Legacy Kepler chart checksum mismatch.')
 PY
 }
 
@@ -232,10 +257,47 @@ import textwrap
 import yaml
 
 
+def estimated_values(state):
+    values = {
+        'fullnameOverride': 'kepler-estimated',
+        'image': {'repository': 'quay.io/sustainable_computing_io/kepler',
+                  'tag': 'release-0.8.0',
+                  'digest': 'sha256:1c822681f48d8c6f66a4613987007107322e5320f695c1cd284cef2d343bf24b',
+                  'pullPolicy': 'IfNotPresent'},
+        'nodeSelector': {'kubernetes.io/hostname': state['node']},
+        'canMount': {'usrSrc': False},
+        'resources': {'requests': {'cpu': '100m', 'memory': '128Mi'},
+                      'limits': {'cpu': '1', 'memory': '512Mi'}},
+        'modelServer': {'enabled': False},
+        'extraEnvVars': {
+            'KEPLER_LOG_LEVEL': '3', 'KEPLER_NAMESPACE': 'kepler-estimated',
+            'ENABLE_GPU': 'false', 'ENABLE_QAT': 'false', 'ENABLE_MSR': 'false',
+            'ENABLE_API_SERVER': 'true', 'ENABLE_EBPF_CGROUPID': 'true',
+            'ENABLE_PROCESS_METRICS': 'false', 'EXPOSE_VM_METRICS': 'false',
+            'EXPOSE_CONTAINER_METRICS': 'true', 'EXPOSE_COMPONENT_POWER': 'true',
+            'EXPOSE_ESTIMATED_IDLE_POWER_METRICS': 'false',
+            'MODEL_SERVER_ENABLE': 'false',
+            'MODEL_CONFIG': 'NODE_COMPONENTS_LOCAL_REGRESSOR=true\nNODE_TOTAL_LOCAL_REGRESSOR=true\nPROCESS_COMPONENTS_ESTIMATOR=false\nPROCESS_TOTAL_ESTIMATOR=false\n',
+            'KUBERNETES_SERVICE_HOST': state['api_host'],
+            'KUBERNETES_SERVICE_PORT': str(state['api_port']),
+            'KUBERNETES_SERVICE_PORT_HTTPS': str(state['api_port']),
+        },
+        'serviceMonitor': {
+            'enabled': True, 'namespace': 'monitoring', 'interval': '5s',
+            'scrapeTimeout': '4s', 'labels': {'release': 'monitoring'},
+            'relabelings': [
+                {'action': 'replace', 'sourceLabels': ['__meta_kubernetes_pod_node_name'], 'targetLabel': 'instance'},
+                {'action': 'replace', 'targetLabel': 'job', 'replacement': 'kepler-estimated'}]},
+    }
+    return values
+
+
 def generate(root, state):
     root = pathlib.Path(root)
     root.mkdir(parents=True, exist_ok=True)
     real_meter = bool(state['sensor_candidates'])
+    if not real_meter:
+        (root / 'kepler-estimated-values.yaml').write_text(yaml.safe_dump(estimated_values(state), sort_keys=False))
     public_host = '[' + state['ipv6'] + ']'
     grafana_url = 'http://' + public_host + ':30000'
     chaos_url = 'http://' + public_host + ':30001'
@@ -307,7 +369,7 @@ def generate(root, state):
     emit('chaos-values.yaml', {
         'clusterScoped': False,
         'controllerManager': {
-            'replicaCount': 1, 'targetNamespace': 'cpu-lab', 'serviceAccount': 'chaos-controller-manager',
+            'replicaCount': 1, 'targetNamespace': 'default', 'serviceAccount': 'chaos-controller-manager',
             'enableFilterNamespace': True, 'allowHostNetworkTesting': False,
             'resources': {'requests': {'cpu': '100m', 'memory': '128Mi'},
                           'limits': {'cpu': '1', 'memory': '512Mi'}}},
@@ -326,8 +388,8 @@ def generate(root, state):
     })
     workload = {
         'apiVersion': 'apps/v1', 'kind': 'Deployment',
-        'metadata': {'name': 'ubuntu-test', 'namespace': 'cpu-lab',
-                     'labels': {'app': 'ubuntu-test'}},
+        'metadata': {'name': 'ubuntu-test', 'namespace': 'default',
+                     'labels': {'app': 'ubuntu-test', 'testbed.lab/managed-by': 'application-install'}},
         'spec': {'replicas': 1, 'selector': {'matchLabels': {'app': 'ubuntu-test'}},
                  'template': {'metadata': {'labels': {'app': 'ubuntu-test', 'testbed.lab/workload': 'cpu'}},
                     'spec': {'automountServiceAccountToken': False,
@@ -339,15 +401,15 @@ def generate(root, state):
     emit('ubuntu-test.yaml', workload)
     emit('cpu-stress.yaml', {
         'apiVersion': 'chaos-mesh.org/v1alpha1', 'kind': 'StressChaos',
-        'metadata': {'name': 'cpu-stress-ubuntu', 'namespace': 'cpu-lab'},
+        'metadata': {'name': 'cpu-stress-ubuntu', 'namespace': 'default'},
         'spec': {'mode': 'one', 'duration': '120s', 'containerNames': ['ubuntu-test'],
-                 'selector': {'namespaces': ['cpu-lab'], 'labelSelectors': {'app': 'ubuntu-test'}},
+                 'selector': {'namespaces': ['default'], 'labelSelectors': {'app': 'ubuntu-test'}},
                  'stressors': {'cpu': {'workers': 3, 'load': 80}}}})
     rbac = [
         {'apiVersion': 'v1', 'kind': 'ServiceAccount',
-         'metadata': {'name': 'chaos-lab-manager', 'namespace': 'cpu-lab'}},
+         'metadata': {'name': 'chaos-lab-manager', 'namespace': 'default'}},
         {'apiVersion': 'rbac.authorization.k8s.io/v1', 'kind': 'Role',
-         'metadata': {'name': 'chaos-lab-manager', 'namespace': 'cpu-lab'},
+         'metadata': {'name': 'chaos-lab-manager', 'namespace': 'default'},
          'rules': [
              {'apiGroups': [''], 'resources': ['pods', 'events', 'services'],
               'verbs': ['get', 'list', 'watch']},
@@ -356,26 +418,26 @@ def generate(root, state):
              {'apiGroups': ['chaos-mesh.org'], 'resources': ['*'],
               'verbs': ['get', 'list', 'watch', 'create', 'delete', 'patch', 'update']}]},
         {'apiVersion': 'rbac.authorization.k8s.io/v1', 'kind': 'RoleBinding',
-         'metadata': {'name': 'chaos-lab-manager', 'namespace': 'cpu-lab'},
-         'subjects': [{'kind': 'ServiceAccount', 'name': 'chaos-lab-manager', 'namespace': 'cpu-lab'}],
+         'metadata': {'name': 'chaos-lab-manager', 'namespace': 'default'},
+         'subjects': [{'kind': 'ServiceAccount', 'name': 'chaos-lab-manager', 'namespace': 'default'}],
          'roleRef': {'apiGroup': 'rbac.authorization.k8s.io', 'kind': 'Role', 'name': 'chaos-lab-manager'}},
         {'apiVersion': 'rbac.authorization.k8s.io/v1', 'kind': 'ClusterRole',
-         'metadata': {'name': 'cpu-lab-chaos-namespace-reader'},
+         'metadata': {'name': 'default-chaos-namespace-reader'},
          'rules': [{'apiGroups': [''], 'resources': ['namespaces'], 'verbs': ['get', 'list', 'watch']}]},
         {'apiVersion': 'rbac.authorization.k8s.io/v1', 'kind': 'ClusterRoleBinding',
-         'metadata': {'name': 'cpu-lab-chaos-namespace-reader'},
-         'subjects': [{'kind': 'ServiceAccount', 'name': 'chaos-lab-manager', 'namespace': 'cpu-lab'},
+         'metadata': {'name': 'default-chaos-namespace-reader'},
+         'subjects': [{'kind': 'ServiceAccount', 'name': 'chaos-lab-manager', 'namespace': 'default'},
                       {'kind': 'ServiceAccount', 'name': 'chaos-controller-manager', 'namespace': 'chaos-mesh'}],
          'roleRef': {'apiGroup': 'rbac.authorization.k8s.io', 'kind': 'ClusterRole',
-                     'name': 'cpu-lab-chaos-namespace-reader'}},
+                     'name': 'default-chaos-namespace-reader'}},
     ]
     (root / 'chaos-access-rbac.yaml').write_text(yaml.safe_dump_all(rbac, sort_keys=False))
     description = (
         'Candidatos a sensores reais foram encontrados. A disponibilidade de watts depende de o Kepler conseguir lê-los. '
         'Selecione uma única zona; package/core/dram podem se sobrepor.' if real_meter else
-        'Esta VM não expõe contadores RAPL nem sensores hwmon de potência/energia legíveis. '
-        'Kepler está instalado com 0 pods desejados. Uso de CPU e memória são reais; watts/joules ficam indisponíveis. '
-        'Nenhum medidor sintético ou modelo de potência foi ativado.')
+        'Energia dinâmica ESTIMADA por regressão local do Kepler legado. Atividade de CPU/eBPF é real; '
+        'os coeficientes oficiais não foram calibrados para esta VM. A parcela ociosa do host não é incluída. '
+        'O gráfico de potência usa W e o de energia usa J no intervalo selecionado.')
     panels = []
     def panel(title, expr, x, y, w=12, h=8, unit='short', kind='timeseries', legend=''):
         value = {'id': len(panels)+1, 'title': title, 'type': kind,
@@ -387,30 +449,43 @@ def generate(root, state):
             'options': {'legend': {'displayMode': 'list', 'placement': 'bottom'},
                         'tooltip': {'mode': 'multi'}}}
         panels.append(value)
-    panels.append({'id': 1, 'type': 'text', 'title': 'CPU Energy Lab — métricas reais',
+    panels.append({'id': 1, 'type': 'text', 'title': 'CPU Energy Lab — CPU medida e energia '+('atribuída por sensor' if real_meter else 'estimada'),
         'gridPos': {'x': 0, 'y': 0, 'w': 24, 'h': 4},
         'options': {'mode': 'markdown', 'content':
             '**Fluxo:** Chaos Dashboard → StressChaos → ubuntu-test → Prometheus → Grafana.\n\n'
             '**Energia:** '+description+'\n\n'
-            '**Experimento recomendado:** namespace `cpu-lab`, app `ubuntu-test`, CPU workers **3**, '
+            '**CPU:** maior leitura entre o cgroup do container e o agregado do pod de teste; os painéis inferiores separam as duas fontes.\n\n'
+            '**Experimento recomendado:** namespace `default`, app `ubuntu-test`, CPU workers **3**, '
             'load **80%**, duração **120s**. O container está limitado a **4 CPUs**.'}})
-    cpu = 'sum(rate(container_cpu_usage_seconds_total{namespace="cpu-lab",container="ubuntu-test",pod=~"ubuntu-test-.*"}[1m]))'
+    container_cpu = 'sum(rate(container_cpu_usage_seconds_total{namespace="default",container="ubuntu-test",pod=~"ubuntu-test-.*"}[1m]))'
+    pod_cpu = 'sum(rate(container_cpu_usage_seconds_total{namespace="default",container="",pod=~"ubuntu-test-.*"}[1m]))'
+    cpu = 'max(label_replace('+container_cpu+',"accounting","container","","") or label_replace('+pod_cpu+',"accounting","pod","",""))'
     panel('Ubuntu-test — CPU utilizada (núcleos)', cpu, 0, 4, unit='cores')
     panel('VM — utilização de CPU (%)', '100 * (1 - avg(rate(node_cpu_seconds_total{mode="idle"}[1m])))', 12, 4, unit='percent')
-    panel('Ubuntu-test — memória de trabalho', 'sum(container_memory_working_set_bytes{namespace="cpu-lab",container="ubuntu-test",pod=~"ubuntu-test-.*"})', 0, 12, unit='bytes')
-    panel('Kepler — potência real da zona selecionada (W)', 'sum(kepler_node_cpu_watts{job="kepler",zone="$zone"})', 12, 12, unit='watt')
-    panel('Kepler — potência atribuída ao Ubuntu-test (W)', 'sum(kepler_pod_cpu_watts{job="kepler",pod_namespace="cpu-lab",pod_name=~"ubuntu-test-.*",zone="$zone"})', 0, 20, unit='watt')
-    panel('Kepler — energia real da zona no período (J)', 'sum(increase(kepler_node_cpu_joules_total{job="kepler",zone="$zone"}[$__range]))', 12, 20, unit='joule', kind='stat')
+    panel('Ubuntu-test — memória de trabalho', 'sum(container_memory_working_set_bytes{namespace="default",container="ubuntu-test",pod=~"ubuntu-test-.*"})', 0, 12, unit='bytes')
+    if real_meter:
+        panel('Kepler — potência real da zona selecionada (W)', 'sum(kepler_node_cpu_watts{job="kepler",zone="$zone"})', 12, 12, unit='watt')
+        panel('Kepler — potência atribuída ao Ubuntu-test (W)', 'sum(kepler_pod_cpu_watts{job="kepler",pod_namespace="default",pod_name=~"ubuntu-test-.*",zone="$zone"})', 0, 20, unit='watt')
+        panel('Kepler — energia da zona no intervalo (J)', 'sum(increase(kepler_node_cpu_joules_total{job="kepler",zone="$zone"}[$__range]))', 12, 20, unit='joule', kind='stat')
+        active_job = 'kepler'
+    else:
+        metric = 'kepler_container_joules_total{job="kepler-estimated",container_namespace="default",pod_name=~"ubuntu-test-.*",mode="dynamic"}'
+        panel('Ubuntu-test — potência dinâmica ESTIMADA (W)', 'sum(rate('+metric+'[1m]))', 12, 12, unit='watt')
+        panel('Ubuntu-test — energia dinâmica ESTIMADA no intervalo (J)', 'sum(increase('+metric+'[$__range]))', 0, 20, unit='joule', kind='stat')
+        panel('Ubuntu-test — energia dinâmica ESTIMADA (Wh)', 'sum(increase('+metric+'[$__range])) / 3600', 12, 20, unit='watth', kind='stat')
+        active_job = 'kepler-estimated'
     panel('CPU do Ubuntu-test — percentual do limite de 4 CPUs', f'100 * ({cpu}) / 4', 0, 28, unit='percent')
-    panel('Kepler — coleta ativa (1 = sim)', 'max(up{job="kepler"}) or vector(0)', 12, 28, kind='stat')
-    dashboard = {'uid': 'cpu-energy-lab', 'title': 'CPU Energy Lab', 'schemaVersion': 39, 'version': 1,
+    panel('Kepler — coleta ativa (1 = sim)', 'max(up{job="'+active_job+'"})', 12, 28, kind='stat')
+    panel('Ubuntu-test — CPU pelo cgroup do pod (núcleos)', 'sum(rate(container_cpu_usage_seconds_total{namespace="default",pod=~"ubuntu-test-.*",container=""}[1m]))', 0, 36, unit='cores')
+    panel('Chaos daemon — CPU utilizada (núcleos)', 'sum(rate(container_cpu_usage_seconds_total{namespace="chaos-mesh",container="chaos-daemon"}[1m]))', 12, 36, unit='cores')
+    dashboard = {'uid': 'cpu-energy-lab', 'title': 'CPU Energy Lab', 'schemaVersion': 39, 'version': 2,
         'tags': ['cpu', 'kepler', 'chaos-mesh', 'testbed'], 'timezone': 'browser', 'refresh': '5s',
         'editable': True, 'time': {'from': 'now-15m', 'to': 'now'},
         'templating': {'list': [{'name': 'zone', 'label': 'Zona de energia (uma por vez)',
             'type': 'query', 'datasource': {'type': 'prometheus', 'uid': 'prometheus'},
             'query': 'label_values(kepler_node_cpu_watts{job="kepler"}, zone)', 'refresh': 1,
             'multi': False, 'includeAll': False,
-            'current': {'text': 'package', 'value': 'package'}}]}, 'panels': panels}
+            'current': {'text': 'package', 'value': 'package'}}] if real_meter else []}, 'panels': panels}
     (root / 'cpu-energy-dashboard.json').write_text(json.dumps(dashboard, ensure_ascii=False, indent=2)+'\n')
     emit('dashboard-configmap.yaml', {'apiVersion': 'v1', 'kind': 'ConfigMap',
         'metadata': {'name': 'cpu-energy-dashboard', 'namespace': 'monitoring',
@@ -432,6 +507,10 @@ for doc in yaml.safe_load_all(sys.stdin):
         sys.exit('Post-renderer received a non-resource YAML document.')
     docs.append(doc)
 for d in docs:
+    if d.get('kind')=='DaemonSet' and d.get('metadata',{}).get('name')=='kepler-estimated':
+        pod=d['spec']['template']['spec'];pod['hostPID']=True;pod['dnsPolicy']='ClusterFirstWithHostNet'
+        for c in pod.get('containers',[]):
+            c['startupProbe'].update({'failureThreshold':30,'periodSeconds':5,'timeoutSeconds':3})
     if d.get('kind')=='Service' and d.get('metadata',{}).get('name') in ('grafana','chaos-dashboard'):
         svc=d['spec'];svc['type']='NodePort'
         svc['ipFamilyPolicy']='RequireDualStack';svc['ipFamilies']=['IPv4','IPv6']
@@ -477,9 +556,9 @@ wait -n "${children[@]}"
 set -Eeuo pipefail
 umask 077
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-kubectl -n cpu-lab create token chaos-lab-manager --duration=24h > "$SCRIPT_DIR/credentials/chaos-token.txt"
+kubectl -n default create token chaos-lab-manager --duration=24h > "$SCRIPT_DIR/credentials/chaos-token.txt"
 printf 'Updated %s/credentials/chaos-token.txt\\n' "$SCRIPT_DIR"
-printf 'Chaos Dashboard — Name: cpu-lab-manager\\nToken:\\n'
+printf 'Chaos Dashboard — Name: default-manager\\nToken:\\n'
 cat "$SCRIPT_DIR/credentials/chaos-token.txt"
 printf '\\n'
 '''
@@ -523,7 +602,7 @@ Grafana: usuário `admin`; senha em `credentials/grafana-password.txt`.
 Chaos Mesh: token em `credentials/chaos-token.txt`; renove com `./renew_chaos_token.sh`.
 O servidor pode limitar a validade solicitada de 24 horas.
 
-Na janela do Chaos Mesh, preencha **Name** com `cpu-lab-manager` e **Token** com o token inteiro.
+Na janela do Chaos Mesh, preencha **Name** com `default-manager` e **Token** com o token inteiro.
 Para consultar os dois logins e renovar automaticamente um token ausente ou próximo de expirar,
 execute `./application_install.sh --credentials` no diretório onde está o instalador,
 com o mesmo `APP_BUILD_DIR` usado na instalação, caso tenha sido personalizado.
@@ -534,7 +613,7 @@ A geração/renovação é automática ao executar o comando; colar o token no n
 
 Abra Grafana e Chaos Dashboard em abas separadas. Observe aproximadamente 1 minuto de baseline.
 No Chaos Dashboard: NEW EXPERIMENT → STRESS TEST → CPU.
-Escolha namespace `cpu-lab`, label `app=ubuntu-test`, container `ubuntu-test`, modo `one`,
+Escolha namespace `default`, label `app=ubuntu-test`, container `ubuntu-test`, modo `one`,
 workers `3`, load `80`, duração `120s`. Use nome `cpu-stress-ubuntu`.
 Submeta para iniciar. A carga termina ao completar o período; acompanhe o estado na interface.
 O arquivo `cpu-stress.yaml` contém o mesmo experimento para referência/importação.
@@ -548,14 +627,14 @@ O gráfico usa taxa de 1 minuto; a curva sobe e desce gradualmente.
 
 {description}
 
-Kepler usa exclusivamente medidores `rapl` e `hwmon`. Não há medidor sintético nem modelo
-substituindo sensores ausentes.
+O instalador usa sensores quando disponíveis; sem sensores, ativa regressão local com os modelos oficiais do Kepler legado.
+Não há medidor fake. Valores de energia estimados são identificados no mesmo dashboard CPU Energy Lab.
 Potência atribuída a um pod é uma atribuição do Kepler a partir do sensor e do uso de CPU;
 não é um wattímetro físico por pod. Numa VM, um sensor exposto pode pertencer ao host físico.
 CPU stress mede carga de CPU; não é um teste de GPU.
 
 Para parar o experimento de exemplo pelo terminal:
-`kubectl -n cpu-lab delete stresschaos cpu-stress-ubuntu --ignore-not-found`.
+`kubectl -n default delete stresschaos cpu-stress-ubuntu --ignore-not-found`.
 '''
     (root / 'ACESSO.md').write_text(guide)
 
@@ -579,8 +658,14 @@ monitoring monitoring monitoring.tgz monitoring-values.yaml
 kepler kepler kepler.tgz kepler-values.yaml
 chaos-mesh chaos-mesh chaos.tgz chaos-values.yaml
 CHARTS
+  if [[ "$ENERGY_BACKEND" == estimated ]]; then
+    helm template kepler-estimated "$BUILD_DIR/charts/kepler-estimated.tgz" -n kepler-estimated \
+      --kube-version "$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1]))["kube_version"])' "$BUILD_DIR/context.json")" \
+      -f "$BUILD_DIR/kepler-estimated-values.yaml" --post-renderer "$BUILD_DIR/helm-post-renderer.py" \
+      > "$BUILD_DIR/kepler-estimated-rendered.yaml"
+  fi
   python3 - "$BUILD_DIR" <<'PY'
-import pathlib,sys,yaml
+import json,pathlib,sys,yaml
 root=pathlib.Path(sys.argv[1]); images=set(); services=set()
 def walk(obj):
     if isinstance(obj,dict):
@@ -589,7 +674,9 @@ def walk(obj):
             walk(v)
     elif isinstance(obj,list):
         for v in obj: walk(v)
-for release in ('monitoring','kepler','chaos-mesh'):
+releases=['monitoring','kepler','chaos-mesh']
+if json.loads((root/'context.json').read_text()).get('energy_backend')=='estimated':releases.append('kepler-estimated')
+for release in releases:
     for doc in yaml.safe_load_all((root/(release+'-rendered.yaml')).read_text()):
         if not isinstance(doc,dict):sys.exit('Rendered chart contains an empty/non-resource document.')
         if doc.get('kind')=='Service':services.add(doc['metadata']['name'])
@@ -639,7 +726,7 @@ EOF
 
 prepare_namespaces() {
   local namespace
-  for namespace in monitoring kepler chaos-mesh cpu-lab; do
+  for namespace in monitoring kepler chaos-mesh; do
     kubectl get namespace "$namespace" --ignore-not-found -o json > "$BUILD_DIR/namespace-check.json"
     python3 - "$BUILD_DIR/namespace-check.json" "$MANAGER" <<'PY'
 import json,pathlib,sys
@@ -652,7 +739,18 @@ PY
     kubectl create namespace "$namespace" --dry-run=client -o yaml | kubectl apply -f -
     kubectl label namespace "$namespace" testbed.lab/managed-by="$MANAGER" --overwrite
   done
-  kubectl annotate namespace cpu-lab chaos-mesh.org/inject=enabled --overwrite
+  kubectl annotate namespace default chaos-mesh.org/inject=enabled --overwrite
+  if [[ "$ENERGY_BACKEND" == estimated ]]; then
+    kubectl get namespace kepler-estimated --ignore-not-found -o json > "$BUILD_DIR/namespace-check.json"
+    python3 - "$BUILD_DIR/namespace-check.json" <<'PY'
+import json,pathlib,sys
+s=pathlib.Path(sys.argv[1]).read_text().strip()
+if s and json.loads(s)['metadata'].get('labels',{}).get('testbed.lab/managed-by') not in ('kepler-pod-energy','application-install'):
+    sys.exit('Existing kepler-estimated namespace has another owner.')
+PY
+    kubectl create namespace kepler-estimated --dry-run=client -o yaml | kubectl apply -f -
+    kubectl label namespace kepler-estimated testbed.lab/managed-by=kepler-pod-energy pod-security.kubernetes.io/enforce=privileged --overwrite
+  fi
   kubectl label node "$NODE_NAME" testbed.lab/energy-sensor="$SENSOR_STATE" --overwrite
   if kubectl -n monitoring get secret grafana-admin --ignore-not-found -o json > "$BUILD_DIR/grafana-secret-check.json"; then
     python3 - "$BUILD_DIR/grafana-secret-check.json" "$BUILD_DIR/credentials" <<'PY'
@@ -703,18 +801,38 @@ PY
 install_applications() {
   install_release monitoring monitoring monitoring.tgz monitoring-values.yaml "kube-prometheus-stack-${KPS_VERSION}"
   install_release kepler kepler kepler.tgz kepler-values.yaml "kepler-${KEPLER_VERSION}"
+  if [[ "$ENERGY_BACKEND" == estimated ]]; then
+    install_release kepler-estimated kepler-estimated kepler-estimated.tgz kepler-estimated-values.yaml 'kepler-0.6.2'
+  fi
   # The namespace filter needs read-only Namespace access during controller startup.
   kubectl apply -f "$BUILD_DIR/chaos-access-rbac.yaml"
   install_release chaos-mesh chaos-mesh chaos.tgz chaos-values.yaml "chaos-mesh-${CHAOS_VERSION}"
   kubectl wait --for=condition=Established crd/stresschaos.chaos-mesh.org --timeout=120s
   kubectl apply -f "$BUILD_DIR/ubuntu-test.yaml"
-  kubectl -n cpu-lab rollout status deployment/ubuntu-test --timeout=180s
+  kubectl -n default rollout status deployment/ubuntu-test --timeout=180s
+  # Migrate only the known, stateless workload from the previous managed lab.
+  if kubectl -n cpu-lab get deployment ubuntu-test --ignore-not-found -o json > "$BUILD_DIR/old-ubuntu.json" 2>/dev/null; then
+    kubectl get namespace cpu-lab --ignore-not-found -o json > "$BUILD_DIR/old-namespace.json"
+    if python3 - "$BUILD_DIR" <<'PY'
+import json,pathlib,sys
+root=pathlib.Path(sys.argv[1]);raw=(root/'old-ubuntu.json').read_text().strip()
+if not raw:sys.exit(1)
+d=json.loads(raw);ns=json.loads((root/'old-namespace.json').read_text())
+c=d['spec']['template']['spec']['containers']
+managed=ns['metadata'].get('labels',{}).get('testbed.lab/managed-by')=='application-install'
+matches=len(c)==1 and c[0]['image']=='docker.io/library/ubuntu:22.04' and c[0].get('command')==['/bin/bash','-c','exec sleep infinity']
+sys.exit(0 if managed and matches and not d['spec']['template']['spec'].get('volumes') else 1)
+PY
+    then kubectl -n cpu-lab delete deployment ubuntu-test --wait=true; fi
+  fi
   kubectl apply -f "$BUILD_DIR/dashboard-configmap.yaml"
+  # Remove only the extra dashboard created by our previous optional helper.
+  kubectl -n monitoring delete configmap -l testbed.lab/managed-by=kepler-pod-energy --ignore-not-found
   # Exercise the actual admission webhook/schema without starting CPU stress.
   kubectl apply --dry-run=server -f "$BUILD_DIR/cpu-stress.yaml"
-  kubectl auth can-i create stresschaos.chaos-mesh.org -n cpu-lab \
-    --as=system:serviceaccount:cpu-lab:chaos-lab-manager
-  kubectl -n cpu-lab create token chaos-lab-manager --duration=24h > "$BUILD_DIR/credentials/chaos-token.txt"
+  kubectl auth can-i create stresschaos.chaos-mesh.org -n default \
+    --as=system:serviceaccount:default:chaos-lab-manager
+  kubectl -n default create token chaos-lab-manager --duration=24h > "$BUILD_DIR/credentials/chaos-token.txt"
   chmod 0600 "$BUILD_DIR/credentials/chaos-token.txt"
 }
 
@@ -730,7 +848,7 @@ verify_metrics() {
     sleep 1
   done
   [[ "$ready" == 1 ]] || die 'Prometheus did not become ready through port-forward.'
-  local query='count(container_cpu_usage_seconds_total{namespace="cpu-lab",container="ubuntu-test",pod=~"ubuntu-test-.*"})'
+  local query='count(container_cpu_usage_seconds_total{namespace="default",container="ubuntu-test",pod=~"ubuntu-test-.*"})'
   ready=0
   for _ in {1..24}; do
     curl -fsS --get --max-time 10 "http://127.0.0.1:${port}/api/v1/query" \
@@ -754,11 +872,34 @@ if not r or float(r[0]['value'][1])!=1: sys.exit('Kepler target is not up. Check
 print('Real-meter Kepler exporter is being scraped.')
 PY
   else
-    info 'Kepler chart installed with zero scheduled Pods: no real energy sensor candidates exposed by this VM.'
+    info 'Verifying the legacy trained estimator and Ubuntu pod energy counters.'
+    kubectl -n default exec deployment/ubuntu-test -c ubuntu-test -- /bin/sleep 8
+    ready=0
+    for _ in {1..36}; do
+      curl -fsS --get --max-time 10 "http://127.0.0.1:${port}/api/v1/query" \
+        --data-urlencode 'query=count(kepler_container_joules_total{job="kepler-estimated",container_namespace="default",pod_name=~"ubuntu-test-.*",mode="dynamic"})' > "$BUILD_DIR/kepler-query.json"
+      if python3 - "$BUILD_DIR/kepler-query.json" <<'PY'
+import json,sys
+r=json.load(open(sys.argv[1])).get('data',{}).get('result',[])
+sys.exit(0 if r and float(r[0]['value'][1])>0 else 1)
+PY
+      then ready=1;break;fi
+      sleep 5
+    done
+    [[ "$ready" == 1 ]] || die 'Estimated Ubuntu energy counters are missing. Inspect kepler-estimated logs and Prometheus targets.'
+    kubectl -n kepler-estimated logs ds/kepler-estimated > "$BUILD_DIR/kepler-estimated.log"
+    python3 - "$BUILD_DIR/kepler-estimated.log" <<'PY'
+import pathlib,sys
+s=pathlib.Path(sys.argv[1]).read_text()
+if 'Using weights from model' not in s or 'estimate Node Component Power' not in s:sys.exit('Legacy regression initialization not confirmed; inspect the Kepler log.')
+print('Official local regression initialized; Ubuntu energy counters present in namespace default.')
+PY
   fi
   kill "$VERIFY_PID" 2>/dev/null || true
   wait "$VERIFY_PID" 2>/dev/null || true
   VERIFY_PID=''
+CPU_MODE=''
+ENERGY_BACKEND=''
   info 'Real CPU telemetry verified. No stress load was started.'
 }
 
@@ -778,24 +919,240 @@ for namespace,name,port,path in [('monitoring','grafana',30000,'/api/health'),('
 PY
 }
 
+run_cpu_diagnostic() {
+  cat > "$BUILD_DIR/application_cpu_diagnostic.py" <<'CPU_DIAGNOSTIC'
+"""Compare native container CPU accounting, Prometheus and a bounded StressChaos."""
+import datetime
+import json
+import pathlib
+import subprocess
+import sys
+import time
+import urllib.parse
+import urllib.request
+
+ROOT = pathlib.Path(sys.argv[1])
+MODE = sys.argv[2]
+OUT = ROOT / ('cpu-diagnostic-' + datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%SZ'))
+OUT.mkdir(mode=0o700, parents=True, exist_ok=True)
+NAMESPACE = 'default'
+
+
+def command(*args, **kwargs):
+    return subprocess.check_output(args, text=True, **kwargs)
+
+
+def get(*args):
+    return json.loads(command('kubectl', '--request-timeout=15s', *args, '-o', 'json'))
+
+
+def save(name, value):
+    (OUT / name).write_text(json.dumps(value, indent=2) + '\n')
+
+
+def native(pid):
+    code = r'''
+import json,pathlib,sys
+pid=int(sys.argv[1]);entry=pathlib.Path('/proc/'+str(pid)+'/cgroup').read_text()
+path=next(line.split(':',2)[2] for line in entry.splitlines() if line.startswith('0::'))
+root=pathlib.Path('/sys/fs/cgroup');group=root/path.lstrip('/')
+if not group.resolve().is_relative_to(root):sys.exit('Invalid cgroup path')
+stat=dict(line.split() for line in (group/'cpu.stat').read_text().splitlines())
+workers=[]
+for p in pathlib.Path('/proc').iterdir():
+    if not p.name.isdigit():continue
+    try:
+        name=(p/'comm').read_text().strip()
+        if not name.startswith('stress-ng'):continue
+        cg=(p/'cgroup').read_text().strip()
+        worker_path=next(line.split(':',2)[2] for line in cg.splitlines() if line.startswith('0::'))
+        workers.append({'pid':int(p.name),'name':name,'cgroup':worker_path,'in_target_cgroup':worker_path==path or worker_path.startswith(path.rstrip('/')+'/')})
+    except (OSError,StopIteration):pass
+print(json.dumps({'cgroup':path,'usage_seconds':int(stat['usage_usec'])/1e6,'cpu_stat':stat,'workers':workers}))
+'''
+    return json.loads(command('sudo', 'python3', '-c', code, str(pid)))
+
+
+def sample(pid, name, seconds=10):
+    before = native(pid)
+    start = time.monotonic()
+    time.sleep(seconds)
+    after = native(pid)
+    if before['cgroup'] != after['cgroup']:
+        raise RuntimeError('Target cgroup changed during measurement.')
+    value = (after['usage_seconds'] - before['usage_seconds']) / (time.monotonic() - start)
+    result = {'cores': value, 'before': before, 'after': after}
+    save(name + '-cgroup.json', result)
+    print(name + ': native container CPU = %.3f cores' % value, flush=True)
+    for worker in after['workers']:
+        print('stress-ng PID %s; target cgroup: %s; path: %s' %
+              (worker['pid'], worker['in_target_cgroup'], worker['cgroup']), flush=True)
+    return value
+
+
+CONTAINER = 'sum(rate(container_cpu_usage_seconds_total{namespace="default",container="ubuntu-test",pod=~"ubuntu-test-.*"}[1m]))'
+POD = 'sum(rate(container_cpu_usage_seconds_total{namespace="default",container="",pod=~"ubuntu-test-.*"}[1m]))'
+DAEMON = 'sum(rate(container_cpu_usage_seconds_total{namespace="chaos-mesh",container="chaos-daemon"}[1m]))'
+
+
+def query(expression):
+    url = 'http://127.0.0.1:19092/api/v1/query?' + urllib.parse.urlencode({'query': expression})
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+    with opener.open(url, timeout=10) as response:
+        result = json.load(response)
+    if result.get('status') != 'success':
+        raise RuntimeError('Prometheus query failed: ' + str(result.get('error')))
+    return result.get('data', {}).get('result', [])
+
+
+def telemetry(name):
+    results = {label: query(expression) for label, expression in
+               [('container', CONTAINER), ('pod', POD), ('chaos_daemon', DAEMON),
+                ('energy', 'kepler_container_joules_total{job="kepler-estimated",container_namespace="default",pod_name=~"ubuntu-test-.*",mode="dynamic"}') ]}
+    save(name + '-prometheus.json', results)
+    for label in ['container', 'pod', 'chaos_daemon']:
+        print('Prometheus ' + label + ': ' + (results[label][0]['value'][1] if results[label] else 'no series'), flush=True)
+    return results
+
+
+def active(obj):
+    status = obj.get('status', {})
+    if status.get('experiment', {}).get('desiredPhase') == 'Stop' and not status.get('instances'):
+        return False
+    return not any(c['type'] == 'AllRecovered' and c['status'] == 'True'
+                   for c in status.get('conditions', []))
+
+
+def main():
+    state = json.loads((ROOT / 'context.json').read_text())
+    if get('get', 'namespace', 'kube-system')['metadata']['uid'] != state['cluster_uid']:
+        raise RuntimeError('Current context belongs to another cluster.')
+    pods = get('-n', NAMESPACE, 'get', 'pods', '-l', 'app=ubuntu-test')['items']
+    pods = [p for p in pods if not p['metadata'].get('deletionTimestamp') and
+            any(s['name'] == 'ubuntu-test' and s.get('ready') for s in p.get('status', {}).get('containerStatuses', []))]
+    if len(pods) != 1:
+        raise RuntimeError('Expected one Ready ubuntu-test pod in namespace default. Run the updated installer first.')
+    pod = pods[0]
+    status = next(s for s in pod['status']['containerStatuses'] if s['name'] == 'ubuntu-test')
+    identifier = status['containerID'].split('://', 1)[1]
+    inspection = json.loads(command('sudo', 'crictl', '--runtime-endpoint', 'unix:///run/containerd/containerd.sock', 'inspect', identifier))
+    info = inspection.get('info', {})
+    if isinstance(info, str):info = json.loads(info)
+    pid = int(info.get('pid', 0))
+    if pid <= 0:raise RuntimeError('Could not resolve the native container PID through CRI.')
+    save('target.json', {'pod': pod['metadata']['name'], 'namespace': NAMESPACE, 'pid': pid, 'container_id': identifier})
+    experiments = get('-n', NAMESPACE, 'get', 'stresschaos')['items']
+    save('experiments-before.json', experiments)
+    print('Target: default/' + pod['metadata']['name'] + '; PID ' + str(pid), flush=True)
+    subprocess.run(['sudo', '-n', 'true'], check=True)
+    log = (OUT / 'port-forward.log').open('w')
+    forward = subprocess.Popen(['kubectl', '-n', 'monitoring', 'port-forward', '--address=127.0.0.1',
+                                'svc/monitoring-prometheus', '19092:9090'], stdout=log, stderr=log)
+    own_experiment = None
+    try:
+        for _ in range(30):
+            if forward.poll() is not None:raise RuntimeError('Port-forward failed. Check port 19092 and its log.')
+            try:
+                query('up');break
+            except (OSError, ValueError):time.sleep(1)
+        else:raise RuntimeError('Prometheus not reachable.')
+        if MODE == 'diagnose':
+            print('Read-only CPU sample. Run while the browser experiment is active.', flush=True)
+            value = sample(pid, 'observation')
+            telemetry('observation')
+            print('Native CPU is the accounting reference; compare it with the Prometheus and stress-worker records.', flush=True)
+            return
+        if any(active(item) for item in experiments):
+            raise RuntimeError('Finish existing StressChaos experiments in default before the controlled test.')
+        print('Control: one CPU worker inside the actual Ubuntu container, bounded to 20 seconds.', flush=True)
+        control = subprocess.Popen(['kubectl', '-n', NAMESPACE, 'exec', pod['metadata']['name'], '-c', 'ubuntu-test',
+                                    '--', '/usr/bin/timeout', '20s', '/bin/bash', '-c', 'while :; do :; done'],
+                                   stdout=subprocess.DEVNULL, stderr=(OUT / 'control.log').open('w'))
+        time.sleep(3)
+        control_cpu = sample(pid, 'control')
+        try:control.wait(timeout=30)
+        except subprocess.TimeoutExpired:control.terminate();raise RuntimeError('Control command failed to finish.')
+        if control.returncode not in (0, 124):raise RuntimeError('Control load failed; inspect control.log.')
+        if control_cpu < 0.3:raise RuntimeError('The direct control did not register expected native CPU use. Inspect the target/cgroup or VM scheduling.')
+        print('Starting one Chaos CPU worker at 90%, bounded to 60 seconds.', flush=True)
+        own_experiment = 'application-cpu-check-' + datetime.datetime.now(datetime.timezone.utc).strftime('%H%M%S')
+        obj = {'apiVersion': 'chaos-mesh.org/v1alpha1', 'kind': 'StressChaos',
+               'metadata': {'name': own_experiment, 'namespace': NAMESPACE,
+                            'labels': {'testbed.lab/managed-by': 'application-cpu-check'}},
+               'spec': {'mode': 'one', 'duration': '60s', 'containerNames': ['ubuntu-test'],
+                        'selector': {'namespaces': [NAMESPACE], 'pods': {NAMESPACE: [pod['metadata']['name']]}},
+                        'stressors': {'cpu': {'workers': 1, 'load': 90}}}}
+        save('experiment.json', obj)
+        subprocess.run(['kubectl', 'create', '-f', '-'], input=json.dumps(obj), text=True, check=True)
+        for _ in range(30):
+            status_obj = get('-n', NAMESPACE, 'get', 'stresschaos', own_experiment)
+            save('experiment-status.json', status_obj)
+            conditions = status_obj.get('status', {}).get('conditions', [])
+            if any(c['type'] == 'AllInjected' and c['status'] == 'True' for c in conditions):break
+            time.sleep(1)
+        else:raise RuntimeError('Chaos did not confirm AllInjected. Inspect experiment-status.json and controller/daemon logs.')
+        chaos_cpu = sample(pid, 'chaos')
+        time.sleep(15)
+        data = telemetry('chaos')
+        save('cpu-summary.json', {'control_cores': control_cpu, 'chaos_cores': chaos_cpu})
+        if chaos_cpu < 0.25:
+            raise RuntimeError('Direct control uses the pod CPU, but Chaos does not. Inspect recorded worker cgroups and daemon logs; Completed is insufficient evidence of target load.')
+        values = [float(data[k][0]['value'][1]) for k in ('container', 'pod') if data[k]]
+        if not values or max(values) < 0.1:
+            raise RuntimeError('Chaos CPU is present in native accounting, but Prometheus does not reflect it. Inspect cAdvisor/CRI collection and the saved series.')
+        print('PASS: direct load and Chaos both consume CPU in the Ubuntu cgroup, with Prometheus telemetry.', flush=True)
+    finally:
+        if own_experiment:
+            subprocess.run(['kubectl', '-n', NAMESPACE, 'delete', 'stresschaos', own_experiment,
+                            '--ignore-not-found', '--wait=false'], check=False)
+        forward.terminate()
+        try:forward.wait(timeout=5)
+        except subprocess.TimeoutExpired:forward.kill()
+        log.close()
+
+
+try:
+    main()
+except (RuntimeError, OSError, ValueError, subprocess.CalledProcessError) as error:
+    print('ERROR: ' + str(error), file=sys.stderr, flush=True)
+    for resource in ['ds/chaos-daemon', 'deploy/chaos-controller-manager']:
+        result = subprocess.run(['kubectl', '--request-timeout=10s', '-n', 'chaos-mesh', 'logs', resource,
+                                 '--tail=150'], text=True, capture_output=True)
+        (OUT / (resource.split('/')[1] + '.log')).write_text(result.stdout + result.stderr)
+    sys.exit(1)
+finally:
+    print('Diagnostic files: ' + str(OUT), flush=True)
+
+CPU_DIAGNOSTIC
+  python3 "$BUILD_DIR/application_cpu_diagnostic.py" "$BUILD_DIR" "$CPU_MODE"
+}
+
 main() {
   while (($#)); do
     case "$1" in
       --check) CHECK_ONLY=1 ;;
       --credentials) CREDENTIAL_MODE=show ;;
       --renew-chaos-token) CREDENTIAL_MODE=renew ;;
+      --diagnose-cpu) CPU_MODE=diagnose ;;
+      --test-cpu) CPU_MODE='test' ;;
       --help|-h) usage; return 0 ;;
       *) usage >&2; die "Unknown option: $1" ;;
     esac
     shift
   done
   if [[ -n "$CREDENTIAL_MODE" ]]; then
-    [[ "$CHECK_ONLY" == 0 ]] || die 'Use --check separately from the credential options.'
+    [[ "$CHECK_ONLY" == 0 && -z "$CPU_MODE" ]] || die 'Use credential options separately.'
     show_credentials "$CREDENTIAL_MODE"
     return 0
   fi
   preflight
+  if [[ -n "$CPU_MODE" ]]; then
+    [[ "$CHECK_ONLY" == 0 ]] || die 'Use --check separately from CPU diagnostics.'
+    run_cpu_diagnostic
+    return 0
+  fi
   [[ "$CHECK_ONLY" == 0 ]] || return 0
+  exec 3>&1 4>&2
   exec > >(tee -a "$BUILD_DIR/application-install-$(date -u +%Y%m%dT%H%M%SZ).log") 2>&1
   prepare_charts
   generate_assets
@@ -815,6 +1172,8 @@ main() {
   printf 'Show logins and renew an expired Chaos token: %s/application_install.sh --credentials\n' "$SCRIPT_DIR"
   kubectl get pods -A -o wide
   helm list -A
+  # Show credentials on the original terminal, outside the installation log.
+  show_credentials show >&3 2>&4
 }
 
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then main "$@"; fi

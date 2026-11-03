@@ -2,9 +2,10 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ubuntu-test
-  namespace: cpu-lab
+  namespace: default
   labels:
     app: ubuntu-test
+    testbed.lab/managed-by: application-install
 spec:
   replicas: 1
   selector:

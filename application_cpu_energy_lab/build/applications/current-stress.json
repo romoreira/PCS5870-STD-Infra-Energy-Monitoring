@@ -1,6 +1,102 @@
 {
     "apiVersion": "v1",
-    "items": [],
+    "items": [
+        {
+            "apiVersion": "chaos-mesh.org/v1alpha1",
+            "kind": "StressChaos",
+            "metadata": {
+                "creationTimestamp": "2026-11-02T23:40:20Z",
+                "finalizers": [
+                    "chaos-mesh/records"
+                ],
+                "generation": 3,
+                "name": "cpu-lab",
+                "namespace": "cpu-lab",
+                "resourceVersion": "17012",
+                "uid": "38187d6e-a7f7-4bcc-b080-3a1f1f5551fd"
+            },
+            "spec": {
+                "duration": "60s",
+                "mode": "all",
+                "selector": {
+                    "labelSelectors": {
+                        "app": "ubuntu-test"
+                    },
+                    "namespaces": [
+                        "cpu-lab"
+                    ]
+                },
+                "stressors": {
+                    "cpu": {
+                        "load": 90,
+                        "workers": 1
+                    }
+                }
+            },
+            "status": {
+                "experiment": {
+                    "containerRecords": [
+                        {
+                            "id": "cpu-lab/ubuntu-test-5d8f5c6cc5-wk8km/ubuntu-test",
+                            "injectedCount": 0,
+                            "phase": "Not Injected",
+                            "recoveredCount": 0,
+                            "selectorKey": "."
+                        }
+                    ],
+                    "desiredPhase": "Stop"
+                }
+            }
+        },
+        {
+            "apiVersion": "chaos-mesh.org/v1alpha1",
+            "kind": "StressChaos",
+            "metadata": {
+                "creationTimestamp": "2026-11-02T23:43:55Z",
+                "finalizers": [
+                    "chaos-mesh/records"
+                ],
+                "generation": 3,
+                "name": "cpu-lab-2",
+                "namespace": "cpu-lab",
+                "resourceVersion": "17020",
+                "uid": "81cbcccb-70c5-4e7c-98fc-bbe2925d0c6e"
+            },
+            "spec": {
+                "duration": "60s",
+                "mode": "all",
+                "selector": {
+                    "labelSelectors": {
+                        "app": "ubuntu-test",
+                        "pod-template-hash": "5d8f5c6cc5"
+                    },
+                    "namespaces": [
+                        "cpu-lab"
+                    ]
+                },
+                "stressors": {
+                    "cpu": {
+                        "load": 90,
+                        "workers": 4
+                    }
+                }
+            },
+            "status": {
+                "experiment": {
+                    "containerRecords": [
+                        {
+                            "id": "cpu-lab/ubuntu-test-5d8f5c6cc5-wk8km/ubuntu-test",
+                            "injectedCount": 0,
+                            "phase": "Not Injected",
+                            "recoveredCount": 0,
+                            "selectorKey": "."
+                        }
+                    ],
+                    "desiredPhase": "Stop"
+                }
+            }
+        }
+    ],
     "kind": "List",
     "metadata": {
         "resourceVersion": ""

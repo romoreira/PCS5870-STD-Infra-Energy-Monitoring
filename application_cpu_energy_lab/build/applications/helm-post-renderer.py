@@ -13,6 +13,10 @@ for doc in yaml.safe_load_all(sys.stdin):
         sys.exit('Post-renderer received a non-resource YAML document.')
     docs.append(doc)
 for d in docs:
+    if d.get('kind')=='DaemonSet' and d.get('metadata',{}).get('name')=='kepler-estimated':
+        pod=d['spec']['template']['spec'];pod['hostPID']=True;pod['dnsPolicy']='ClusterFirstWithHostNet'
+        for c in pod.get('containers',[]):
+            c['startupProbe'].update({'failureThreshold':30,'periodSeconds':5,'timeoutSeconds':3})
     if d.get('kind')=='Service' and d.get('metadata',{}).get('name') in ('grafana','chaos-dashboard'):
         svc=d['spec'];svc['type']='NodePort'
         svc['ipFamilyPolicy']='RequireDualStack';svc['ipFamilies']=['IPv4','IPv6']

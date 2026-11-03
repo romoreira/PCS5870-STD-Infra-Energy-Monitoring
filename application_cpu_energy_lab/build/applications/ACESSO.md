@@ -35,11 +35,18 @@ Grafana: usuário `admin`; senha em `credentials/grafana-password.txt`.
 Chaos Mesh: token em `credentials/chaos-token.txt`; renove com `./renew_chaos_token.sh`.
 O servidor pode limitar a validade solicitada de 24 horas.
 
+Na janela do Chaos Mesh, preencha **Name** com `default-manager` e **Token** com o token inteiro.
+Para consultar os dois logins e renovar automaticamente um token ausente ou próximo de expirar,
+execute `./application_install.sh --credentials` no diretório onde está o instalador,
+com o mesmo `APP_BUILD_DIR` usado na instalação, caso tenha sido personalizado.
+Para forçar a renovação, use `--renew-chaos-token`. Essas opções não reinstalam aplicações.
+A geração/renovação é automática ao executar o comando; colar o token no navegador continua manual.
+
 ## Experimento pelo navegador
 
 Abra Grafana e Chaos Dashboard em abas separadas. Observe aproximadamente 1 minuto de baseline.
 No Chaos Dashboard: NEW EXPERIMENT → STRESS TEST → CPU.
-Escolha namespace `cpu-lab`, label `app=ubuntu-test`, container `ubuntu-test`, modo `one`,
+Escolha namespace `default`, label `app=ubuntu-test`, container `ubuntu-test`, modo `one`,
 workers `3`, load `80`, duração `120s`. Use nome `cpu-stress-ubuntu`.
 Submeta para iniciar. A carga termina ao completar o período; acompanhe o estado na interface.
 O arquivo `cpu-stress.yaml` contém o mesmo experimento para referência/importação.
@@ -51,13 +58,13 @@ O gráfico usa taxa de 1 minuto; a curva sobe e desce gradualmente.
 
 ## Energia
 
-Esta VM não expõe contadores RAPL nem sensores hwmon de potência/energia legíveis. Kepler está instalado com 0 pods desejados. Uso de CPU e memória são reais; watts/joules ficam indisponíveis. Nenhum medidor sintético ou modelo de potência foi ativado.
+Energia dinâmica ESTIMADA por regressão local do Kepler legado. Atividade de CPU/eBPF é real; os coeficientes oficiais não foram calibrados para esta VM. A parcela ociosa do host não é incluída. O gráfico de potência usa W e o de energia usa J no intervalo selecionado.
 
-Kepler usa exclusivamente medidores `rapl` e `hwmon`. Não há medidor sintético nem modelo
-substituindo sensores ausentes.
+O instalador usa sensores quando disponíveis; sem sensores, ativa regressão local com os modelos oficiais do Kepler legado.
+Não há medidor fake. Valores de energia estimados são identificados no mesmo dashboard CPU Energy Lab.
 Potência atribuída a um pod é uma atribuição do Kepler a partir do sensor e do uso de CPU;
 não é um wattímetro físico por pod. Numa VM, um sensor exposto pode pertencer ao host físico.
 CPU stress mede carga de CPU; não é um teste de GPU.
 
 Para parar o experimento de exemplo pelo terminal:
-`kubectl -n cpu-lab delete stresschaos cpu-stress-ubuntu --ignore-not-found`.
+`kubectl -n default delete stresschaos cpu-stress-ubuntu --ignore-not-found`.

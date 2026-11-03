@@ -1,7 +1,7 @@
 clusterScoped: false
 controllerManager:
   replicaCount: 1
-  targetNamespace: cpu-lab
+  targetNamespace: default
   serviceAccount: chaos-controller-manager
   enableFilterNamespace: true
   allowHostNetworkTesting: false

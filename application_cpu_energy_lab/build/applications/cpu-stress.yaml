@@ -2,7 +2,7 @@ apiVersion: chaos-mesh.org/v1alpha1
 kind: StressChaos
 metadata:
   name: cpu-stress-ubuntu
-  namespace: cpu-lab
+  namespace: default
 spec:
   mode: one
   duration: 120s
@@ -10,7 +10,7 @@ spec:
   - ubuntu-test
   selector:
     namespaces:
-    - cpu-lab
+    - default
     labelSelectors:
       app: ubuntu-test
   stressors:
