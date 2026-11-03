@@ -1,0 +1,98 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cpu-energy-dashboard
+  namespace: monitoring
+  labels:
+    grafana_dashboard: '1'
+    app.kubernetes.io/managed-by: application-install
+data:
+  cpu-energy-lab.json: "{\"uid\": \"cpu-energy-lab\", \"title\": \"CPU Energy Lab\"\
+    , \"schemaVersion\": 39, \"version\": 1, \"tags\": [\"cpu\", \"kepler\", \"chaos-mesh\"\
+    , \"testbed\"], \"timezone\": \"browser\", \"refresh\": \"5s\", \"editable\":\
+    \ true, \"time\": {\"from\": \"now-15m\", \"to\": \"now\"}, \"templating\": {\"\
+    list\": [{\"name\": \"zone\", \"label\": \"Zona de energia (uma por vez)\", \"\
+    type\": \"query\", \"datasource\": {\"type\": \"prometheus\", \"uid\": \"prometheus\"\
+    }, \"query\": \"label_values(kepler_node_cpu_watts{job=\\\"kepler\\\"}, zone)\"\
+    , \"refresh\": 1, \"multi\": false, \"includeAll\": false, \"current\": {\"text\"\
+    : \"package\", \"value\": \"package\"}}]}, \"panels\": [{\"id\": 1, \"type\":\
+    \ \"text\", \"title\": \"CPU Energy Lab \u2014 m\xE9tricas reais\", \"gridPos\"\
+    : {\"x\": 0, \"y\": 0, \"w\": 24, \"h\": 4}, \"options\": {\"mode\": \"markdown\"\
+    , \"content\": \"**Fluxo:** Chaos Dashboard \u2192 StressChaos \u2192 ubuntu-test\
+    \ \u2192 Prometheus \u2192 Grafana.\\n\\n**Energia:** Esta VM n\xE3o exp\xF5e\
+    \ contadores RAPL nem sensores hwmon de pot\xEAncia/energia leg\xEDveis. Kepler\
+    \ est\xE1 instalado com 0 pods desejados. Uso de CPU e mem\xF3ria s\xE3o reais;\
+    \ watts/joules ficam indispon\xEDveis. Nenhum medidor sint\xE9tico ou modelo de\
+    \ pot\xEAncia foi ativado.\\n\\n**Experimento recomendado:** namespace `cpu-lab`,\
+    \ app `ubuntu-test`, CPU workers **3**, load **80%**, dura\xE7\xE3o **120s**.\
+    \ O container est\xE1 limitado a **4 CPUs**.\"}}, {\"id\": 2, \"title\": \"Ubuntu-test\
+    \ \u2014 CPU utilizada (n\xFAcleos)\", \"type\": \"timeseries\", \"gridPos\":\
+    \ {\"x\": 0, \"y\": 4, \"w\": 12, \"h\": 8}, \"datasource\": {\"type\": \"prometheus\"\
+    , \"uid\": \"prometheus\"}, \"targets\": [{\"refId\": \"A\", \"expr\": \"sum(rate(container_cpu_usage_seconds_total{namespace=\\\
+    \"cpu-lab\\\",container=\\\"ubuntu-test\\\",pod=~\\\"ubuntu-test-.*\\\"}[1m]))\"\
+    , \"legendFormat\": \"\"}], \"fieldConfig\": {\"defaults\": {\"unit\": \"cores\"\
+    , \"noValue\": \"Indispon\xEDvel\", \"custom\": {\"drawStyle\": \"line\", \"fillOpacity\"\
+    : 10, \"lineWidth\": 2}}, \"overrides\": []}, \"options\": {\"legend\": {\"displayMode\"\
+    : \"list\", \"placement\": \"bottom\"}, \"tooltip\": {\"mode\": \"multi\"}}},\
+    \ {\"id\": 3, \"title\": \"VM \u2014 utiliza\xE7\xE3o de CPU (%)\", \"type\":\
+    \ \"timeseries\", \"gridPos\": {\"x\": 12, \"y\": 4, \"w\": 12, \"h\": 8}, \"\
+    datasource\": {\"type\": \"prometheus\", \"uid\": \"prometheus\"}, \"targets\"\
+    : [{\"refId\": \"A\", \"expr\": \"100 * (1 - avg(rate(node_cpu_seconds_total{mode=\\\
+    \"idle\\\"}[1m])))\", \"legendFormat\": \"\"}], \"fieldConfig\": {\"defaults\"\
+    : {\"unit\": \"percent\", \"noValue\": \"Indispon\xEDvel\", \"custom\": {\"drawStyle\"\
+    : \"line\", \"fillOpacity\": 10, \"lineWidth\": 2}}, \"overrides\": []}, \"options\"\
+    : {\"legend\": {\"displayMode\": \"list\", \"placement\": \"bottom\"}, \"tooltip\"\
+    : {\"mode\": \"multi\"}}}, {\"id\": 4, \"title\": \"Ubuntu-test \u2014 mem\xF3\
+    ria de trabalho\", \"type\": \"timeseries\", \"gridPos\": {\"x\": 0, \"y\": 12,\
+    \ \"w\": 12, \"h\": 8}, \"datasource\": {\"type\": \"prometheus\", \"uid\": \"\
+    prometheus\"}, \"targets\": [{\"refId\": \"A\", \"expr\": \"sum(container_memory_working_set_bytes{namespace=\\\
+    \"cpu-lab\\\",container=\\\"ubuntu-test\\\",pod=~\\\"ubuntu-test-.*\\\"})\", \"\
+    legendFormat\": \"\"}], \"fieldConfig\": {\"defaults\": {\"unit\": \"bytes\",\
+    \ \"noValue\": \"Indispon\xEDvel\", \"custom\": {\"drawStyle\": \"line\", \"fillOpacity\"\
+    : 10, \"lineWidth\": 2}}, \"overrides\": []}, \"options\": {\"legend\": {\"displayMode\"\
+    : \"list\", \"placement\": \"bottom\"}, \"tooltip\": {\"mode\": \"multi\"}}},\
+    \ {\"id\": 5, \"title\": \"Kepler \u2014 pot\xEAncia real da zona selecionada\
+    \ (W)\", \"type\": \"timeseries\", \"gridPos\": {\"x\": 12, \"y\": 12, \"w\":\
+    \ 12, \"h\": 8}, \"datasource\": {\"type\": \"prometheus\", \"uid\": \"prometheus\"\
+    }, \"targets\": [{\"refId\": \"A\", \"expr\": \"sum(kepler_node_cpu_watts{job=\\\
+    \"kepler\\\",zone=\\\"$zone\\\"})\", \"legendFormat\": \"\"}], \"fieldConfig\"\
+    : {\"defaults\": {\"unit\": \"watt\", \"noValue\": \"Indispon\xEDvel\", \"custom\"\
+    : {\"drawStyle\": \"line\", \"fillOpacity\": 10, \"lineWidth\": 2}}, \"overrides\"\
+    : []}, \"options\": {\"legend\": {\"displayMode\": \"list\", \"placement\": \"\
+    bottom\"}, \"tooltip\": {\"mode\": \"multi\"}}}, {\"id\": 6, \"title\": \"Kepler\
+    \ \u2014 pot\xEAncia atribu\xEDda ao Ubuntu-test (W)\", \"type\": \"timeseries\"\
+    , \"gridPos\": {\"x\": 0, \"y\": 20, \"w\": 12, \"h\": 8}, \"datasource\": {\"\
+    type\": \"prometheus\", \"uid\": \"prometheus\"}, \"targets\": [{\"refId\": \"\
+    A\", \"expr\": \"sum(kepler_pod_cpu_watts{job=\\\"kepler\\\",pod_namespace=\\\"\
+    cpu-lab\\\",pod_name=~\\\"ubuntu-test-.*\\\",zone=\\\"$zone\\\"})\", \"legendFormat\"\
+    : \"\"}], \"fieldConfig\": {\"defaults\": {\"unit\": \"watt\", \"noValue\": \"\
+    Indispon\xEDvel\", \"custom\": {\"drawStyle\": \"line\", \"fillOpacity\": 10,\
+    \ \"lineWidth\": 2}}, \"overrides\": []}, \"options\": {\"legend\": {\"displayMode\"\
+    : \"list\", \"placement\": \"bottom\"}, \"tooltip\": {\"mode\": \"multi\"}}},\
+    \ {\"id\": 7, \"title\": \"Kepler \u2014 energia real da zona no per\xEDodo (J)\"\
+    , \"type\": \"stat\", \"gridPos\": {\"x\": 12, \"y\": 20, \"w\": 12, \"h\": 8},\
+    \ \"datasource\": {\"type\": \"prometheus\", \"uid\": \"prometheus\"}, \"targets\"\
+    : [{\"refId\": \"A\", \"expr\": \"sum(increase(kepler_node_cpu_joules_total{job=\\\
+    \"kepler\\\",zone=\\\"$zone\\\"}[$__range]))\", \"legendFormat\": \"\"}], \"fieldConfig\"\
+    : {\"defaults\": {\"unit\": \"joule\", \"noValue\": \"Indispon\xEDvel\", \"custom\"\
+    : {\"drawStyle\": \"line\", \"fillOpacity\": 10, \"lineWidth\": 2}}, \"overrides\"\
+    : []}, \"options\": {\"legend\": {\"displayMode\": \"list\", \"placement\": \"\
+    bottom\"}, \"tooltip\": {\"mode\": \"multi\"}}}, {\"id\": 8, \"title\": \"CPU\
+    \ do Ubuntu-test \u2014 percentual do limite de 4 CPUs\", \"type\": \"timeseries\"\
+    , \"gridPos\": {\"x\": 0, \"y\": 28, \"w\": 12, \"h\": 8}, \"datasource\": {\"\
+    type\": \"prometheus\", \"uid\": \"prometheus\"}, \"targets\": [{\"refId\": \"\
+    A\", \"expr\": \"100 * (sum(rate(container_cpu_usage_seconds_total{namespace=\\\
+    \"cpu-lab\\\",container=\\\"ubuntu-test\\\",pod=~\\\"ubuntu-test-.*\\\"}[1m])))\
+    \ / 4\", \"legendFormat\": \"\"}], \"fieldConfig\": {\"defaults\": {\"unit\":\
+    \ \"percent\", \"noValue\": \"Indispon\xEDvel\", \"custom\": {\"drawStyle\": \"\
+    line\", \"fillOpacity\": 10, \"lineWidth\": 2}}, \"overrides\": []}, \"options\"\
+    : {\"legend\": {\"displayMode\": \"list\", \"placement\": \"bottom\"}, \"tooltip\"\
+    : {\"mode\": \"multi\"}}}, {\"id\": 9, \"title\": \"Kepler \u2014 coleta ativa\
+    \ (1 = sim)\", \"type\": \"stat\", \"gridPos\": {\"x\": 12, \"y\": 28, \"w\":\
+    \ 12, \"h\": 8}, \"datasource\": {\"type\": \"prometheus\", \"uid\": \"prometheus\"\
+    }, \"targets\": [{\"refId\": \"A\", \"expr\": \"max(up{job=\\\"kepler\\\"}) or\
+    \ vector(0)\", \"legendFormat\": \"\"}], \"fieldConfig\": {\"defaults\": {\"unit\"\
+    : \"short\", \"noValue\": \"Indispon\xEDvel\", \"custom\": {\"drawStyle\": \"\
+    line\", \"fillOpacity\": 10, \"lineWidth\": 2}}, \"overrides\": []}, \"options\"\
+    : {\"legend\": {\"displayMode\": \"list\", \"placement\": \"bottom\"}, \"tooltip\"\
+    : {\"mode\": \"multi\"}}}]}"

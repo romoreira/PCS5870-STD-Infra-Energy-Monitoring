@@ -1,0 +1,28 @@
+VALIDACAO LOCAL — APPLICATION INSTALLER
+
+PASS Bash syntax (bash -n)
+PASS ShellCheck 0.11.0: installer and generated browser/token helpers
+PASS Pinned charts SHA-256: kube-prometheus-stack 92.17.0, Kepler 0.12.0, Chaos Mesh 2.8.7
+PASS Helm template for Kubernetes 1.35.10, including CRDs and network post-renderer
+PASS Expected Grafana, Prometheus, Kepler and Chaos Dashboard Service names
+PASS Grafana 30000 and Chaos Dashboard 30001: dual-stack NodePorts, IPv4 primary
+PASS Chaos Dashboard exposes only its browser port through NodePort
+PASS Regression: upstream empty documents are skipped, never emitted as null resources
+PASS Invalid scalar YAML documents are rejected
+PASS Helm native YAML parser (helm lint): all three final rendered charts
+PASS Previous Chaos manifest reproduced the exact separator error; corrected manifest passes
+PASS Prometheus datasource uid and removal of unused Alertmanager datasource
+PASS Image manifest availability: 13 public image references returned HTTP 200
+PASS VM without energy sensors, real-only mode
+PASS Sensor-backed configuration
+PASS Exact upstream StressChaos schema and CPU/namespace limits
+PASS Embedded Python; no automatic stress or infrastructure reinstall
+PASS Pinned Helm chart renders: monitoring
+PASS Pinned Helm chart renders: kepler
+PASS Pinned Helm chart renders: chaos-mesh
+
+Initial package image availability checks are retained; image versions are unchanged.
+These checks did not deploy applications into the user's VM.
+The installer verifies Helm readiness, the real admission webhook with server dry-run,
+and the presence of real Ubuntu CPU telemetry in Prometheus at runtime.
+CPU stress is not started automatically. No synthetic energy meter is enabled.

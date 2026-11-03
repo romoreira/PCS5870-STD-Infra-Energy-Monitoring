@@ -1,0 +1,37 @@
+fullnameOverride: kepler
+namespace:
+  create: false
+  name: kepler
+image:
+  tag: v0.12.0
+daemonset:
+  nodeSelector:
+    testbed.lab/energy-sensor: present
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+config:
+  log:
+    level: info
+  cpu:
+    preferredMeters:
+    - rapl
+    - hwmon
+  monitor:
+    interval: 5s
+  kube:
+    enabled: true
+    podInformer:
+      mode: apiserver
+  experimental:
+    gpu:
+      enabled: false
+  dev:
+    fake-cpu-meter:
+      enabled: false
+serviceMonitor:
+  enabled: false

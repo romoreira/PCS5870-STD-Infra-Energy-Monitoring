@@ -1,0 +1,19 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: StressChaos
+metadata:
+  name: cpu-stress-ubuntu
+  namespace: cpu-lab
+spec:
+  mode: one
+  duration: 120s
+  containerNames:
+  - ubuntu-test
+  selector:
+    namespaces:
+    - cpu-lab
+    labelSelectors:
+      app: ubuntu-test
+  stressors:
+    cpu:
+      workers: 3
+      load: 80

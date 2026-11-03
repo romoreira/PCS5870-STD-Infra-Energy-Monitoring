@@ -1,0 +1,13 @@
+{
+  "cluster_uid": "815c0339-620f-466c-b637-ab12bf8b8d43",
+  "node": "vmteste",
+  "ipv4": "10.30.6.94",
+  "ipv6": "2001:48d0:6031:1991:f816:3eff:fee2:e44a",
+  "interface": "enp3s0",
+  "api_host": "10.30.6.94",
+  "api_port": 6443,
+  "service_cidr": "10.96.0.0/16",
+  "service_ip": "10.96.0.1",
+  "kube_version": "1.35.10",
+  "sensor_candidates": []
+}

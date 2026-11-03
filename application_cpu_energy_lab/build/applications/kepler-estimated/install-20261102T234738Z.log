@@ -1,0 +1,24 @@
+
+[INFO] Downloading the pinned legacy chart.
+Chart SHA-256 verified.
+WARNING: This chart is deprecated
+
+[INFO] Pulling the pinned Kepler release-0.8.0 image into containerd.
+time="2026-11-02T23:47:42Z" level=warning msg="Config \"/etc/crictl.yaml\" does not exist, trying next: \"/usr/bin/crictl.yaml\""
+Image is up to date for sha256:19e8184e772661b9f1b2e00096aa22fc58d31a8a35813037be110b937574f85f
+namespace/kepler-estimated created
+namespace/kepler-estimated labeled
+namespace/kepler-estimated labeled
+Release "kepler-estimated" does not exist. Installing it now.
+WARNING: This chart is deprecated
+NAME: kepler-estimated
+LAST DEPLOYED: Mon Nov  2 23:47:48 2026
+NAMESPACE: kepler-estimated
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+Waiting for daemon set "kepler-estimated" rollout to finish: 0 of 1 updated pods are available...
+daemon set "kepler-estimated" successfully rolled out
+configmap/pod-energy-estimated-dashboard created
+
+[INFO] Checking energy counters for the actual Ubuntu pod in Prometheus.

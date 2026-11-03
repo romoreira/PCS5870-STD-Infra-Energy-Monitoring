@@ -1,0 +1,55 @@
+# Ubuntu 22.04 / vmteste: private IPv4 and Internet default route over IPv6.
+# install.sh validates this file and renders build/kubeadm-config.rendered.yaml
+# with the addresses currently assigned to NODE_INTERFACE and the installed
+# Kubernetes patch version. Run install.sh, not kubeadm init directly.
+apiVersion: kubeadm.k8s.io/v1beta4
+kind: InitConfiguration
+localAPIEndpoint:
+  advertiseAddress: "10.30.6.94"
+  bindPort: 6443
+nodeRegistration:
+  name: vmteste
+  criSocket: unix:///run/containerd/containerd.sock
+  kubeletExtraArgs:
+    - name: node-ip
+      value: "10.30.6.94,2001:48d0:6031:1991:f816:3eff:fee2:e44a"
+---
+apiVersion: kubeadm.k8s.io/v1beta4
+kind: ClusterConfiguration
+clusterName: testbed
+kubernetesVersion: stable-1.35
+controlPlaneEndpoint: "10.30.6.94:6443"
+networking:
+  dnsDomain: cluster.local
+  podSubnet: "10.244.0.0/16,fd5c:50a5:7e57:100::/56"
+  serviceSubnet: "10.96.0.0/16,fd5c:50a5:7e57:200::/112"
+apiServer:
+  certSANs:
+    - vmteste
+    - localhost
+    - "127.0.0.1"
+    - "::1"
+    - "10.30.6.94"
+    - "2001:48d0:6031:1991:f816:3eff:fee2:e44a"
+  extraArgs:
+    - name: bind-address
+      value: "::"
+controllerManager:
+  extraArgs:
+    - name: node-cidr-mask-size-ipv4
+      value: "24"
+    - name: node-cidr-mask-size-ipv6
+      value: "64"
+---
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+cgroupDriver: systemd
+address: "::"
+# The installer selects an existing resolv.conf without loopback nameservers.
+resolvConf: /run/systemd/resolve/resolv.conf
+---
+apiVersion: kubeproxy.config.k8s.io/v1alpha1
+kind: KubeProxyConfiguration
+mode: iptables
+clusterCIDR: "10.244.0.0/16,fd5c:50a5:7e57:100::/56"
+
