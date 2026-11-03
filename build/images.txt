@@ -1,0 +1,7 @@
+docker.io/curlimages/curl:8.12.1
+docker.io/openebs/linux-utils:4.1.0
+ghcr.io/flannel-io/flannel-cni-plugin:v1.9.1-flannel2
+ghcr.io/flannel-io/flannel:v0.28.6
+ghcr.io/k8snetworkplumbingwg/multus-cni:v4.3.0
+ghcr.io/k8snetworkplumbingwg/ovs-cni-plugin:v0.40.0
+openebs/provisioner-localpv:4.2.0

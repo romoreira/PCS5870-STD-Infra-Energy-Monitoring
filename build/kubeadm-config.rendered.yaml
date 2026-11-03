@@ -1,0 +1,49 @@
+apiVersion: kubeadm.k8s.io/v1beta4
+kind: InitConfiguration
+localAPIEndpoint:
+  advertiseAddress: 10.30.6.79
+  bindPort: 6443
+nodeRegistration:
+  name: vm1
+  criSocket: unix:///run/containerd/containerd.sock
+  kubeletExtraArgs:
+  - name: node-ip
+    value: 10.30.6.79,2001:48d0:6031:1991:f816:3eff:fecd:5bec
+---
+apiVersion: kubeadm.k8s.io/v1beta4
+kind: ClusterConfiguration
+clusterName: testbed
+kubernetesVersion: v1.35.10
+controlPlaneEndpoint: 10.30.6.79:6443
+networking:
+  dnsDomain: cluster.local
+  podSubnet: 10.244.0.0/16,fd5c:50a5:7e57:100::/56
+  serviceSubnet: 10.96.0.0/16,fd5c:50a5:7e57:200::/112
+apiServer:
+  certSANs:
+  - vm1
+  - localhost
+  - 127.0.0.1
+  - ::1
+  - 10.30.6.79
+  - 2001:48d0:6031:1991:f816:3eff:fecd:5bec
+  extraArgs:
+  - name: bind-address
+    value: '::'
+controllerManager:
+  extraArgs:
+  - name: node-cidr-mask-size-ipv4
+    value: '24'
+  - name: node-cidr-mask-size-ipv6
+    value: '64'
+---
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+cgroupDriver: systemd
+address: '::'
+resolvConf: /run/systemd/resolve/resolv.conf
+---
+apiVersion: kubeproxy.config.k8s.io/v1alpha1
+kind: KubeProxyConfiguration
+mode: iptables
+clusterCIDR: 10.244.0.0/16,fd5c:50a5:7e57:100::/56

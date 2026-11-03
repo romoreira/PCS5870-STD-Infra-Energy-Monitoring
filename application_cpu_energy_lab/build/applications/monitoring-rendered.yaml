@@ -100006,7 +100006,7 @@ data:
 
     domain = ''''
 
-    root_url = http://[2001:48d0:6031:1991:f816:3eff:fee2:e44a]:30000/
+    root_url = http://[2001:48d0:6031:1991:f816:3eff:fecd:5bec]:30000/
 
     [unified_storage]
 
@@ -100810,7 +100810,7 @@ spec:
         - name: HOST_IP
           value: 0.0.0.0
         - name: KUBERNETES_SERVICE_HOST
-          value: 10.30.6.94
+          value: 10.30.6.79
         - name: KUBERNETES_SERVICE_PORT
           value: '6443'
         - name: KUBERNETES_SERVICE_PORT_HTTPS
@@ -100918,7 +100918,7 @@ spec:
         app.kubernetes.io/instance: monitoring
         app.kubernetes.io/version: 13.3.0
       annotations:
-        checksum/config: ca2f1b95c1aa397107b9f7a0d28688a37dbba4fdcf33983e3c138e8c28046cff
+        checksum/config: 71a801df264c7d1c67e08b72fe894662a9f10d0942da5073a5cdb37cbf857b57
         checksum/sc-dashboard-provider-config: e70bf6a851099d385178a76de9757bb0bef8299da6d8443602590e44f05fdf24
         kubectl.kubernetes.io/default-container: grafana
     spec:

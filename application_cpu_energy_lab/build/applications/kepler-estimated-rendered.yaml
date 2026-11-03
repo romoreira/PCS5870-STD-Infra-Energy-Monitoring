@@ -154,7 +154,7 @@ spec:
         - name: MODEL_SERVER_ENABLE
           value: 'false'
         - name: KUBERNETES_SERVICE_HOST
-          value: 10.30.6.94
+          value: 10.30.6.79
         - name: KUBERNETES_SERVICE_PORT
           value: '6443'
         - name: KUBERNETES_SERVICE_PORT_HTTPS
@@ -221,7 +221,7 @@ spec:
         emptyDir:
           sizeLimit: 100Ki
       nodeSelector:
-        kubernetes.io/hostname: vmteste
+        kubernetes.io/hostname: vm1
         kubernetes.io/os: linux
       tolerations:
       - effect: NoSchedule

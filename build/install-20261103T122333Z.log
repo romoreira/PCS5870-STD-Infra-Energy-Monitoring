@@ -1,0 +1,519 @@
+
+[INFO] Installing Ubuntu prerequisites and Kubernetes packages.
+Hit:1 http://nova.clouds.archive.ubuntu.com/ubuntu jammy InRelease
+Get:2 http://security.ubuntu.com/ubuntu jammy-security InRelease [129 kB]
+Get:3 http://nova.clouds.archive.ubuntu.com/ubuntu jammy-updates InRelease [128 kB]
+Get:4 http://nova.clouds.archive.ubuntu.com/ubuntu jammy-backports InRelease [127 kB]
+Get:5 http://security.ubuntu.com/ubuntu jammy-security/main amd64 Packages [3673 kB]
+Get:6 http://nova.clouds.archive.ubuntu.com/ubuntu jammy/universe amd64 Packages [14.1 MB]
+Get:7 http://security.ubuntu.com/ubuntu jammy-security/main Translation-en [512 kB]
+Get:8 http://security.ubuntu.com/ubuntu jammy-security/main amd64 c-n-f Metadata [14.7 kB]
+Get:9 http://security.ubuntu.com/ubuntu jammy-security/restricted amd64 Packages [6545 kB]
+Get:10 http://nova.clouds.archive.ubuntu.com/ubuntu jammy/universe Translation-en [5652 kB]
+Get:11 http://security.ubuntu.com/ubuntu jammy-security/restricted Translation-en [1261 kB]
+Get:12 http://security.ubuntu.com/ubuntu jammy-security/universe amd64 Packages [1055 kB]
+Get:13 http://security.ubuntu.com/ubuntu jammy-security/universe Translation-en [238 kB]
+Get:14 http://security.ubuntu.com/ubuntu jammy-security/universe amd64 c-n-f Metadata [23.2 kB]
+Get:15 http://security.ubuntu.com/ubuntu jammy-security/multiverse amd64 Packages [79.6 kB]
+Get:16 http://security.ubuntu.com/ubuntu jammy-security/multiverse Translation-en [13.7 kB]
+Get:17 http://security.ubuntu.com/ubuntu jammy-security/multiverse amd64 c-n-f Metadata [544 B]
+Get:18 http://nova.clouds.archive.ubuntu.com/ubuntu jammy/universe amd64 c-n-f Metadata [286 kB]
+Get:19 http://nova.clouds.archive.ubuntu.com/ubuntu jammy/multiverse amd64 Packages [217 kB]
+Get:20 http://nova.clouds.archive.ubuntu.com/ubuntu jammy/multiverse Translation-en [112 kB]
+Get:21 http://nova.clouds.archive.ubuntu.com/ubuntu jammy/multiverse amd64 c-n-f Metadata [8372 B]
+Get:22 http://nova.clouds.archive.ubuntu.com/ubuntu jammy-updates/main amd64 Packages [3939 kB]
+Get:23 http://nova.clouds.archive.ubuntu.com/ubuntu jammy-updates/main Translation-en [579 kB]
+Get:24 http://nova.clouds.archive.ubuntu.com/ubuntu jammy-updates/restricted amd64 Packages [6778 kB]
+Get:25 http://nova.clouds.archive.ubuntu.com/ubuntu jammy-updates/restricted Translation-en [1303 kB]
+Get:26 http://nova.clouds.archive.ubuntu.com/ubuntu jammy-updates/universe amd64 Packages [1290 kB]
+Get:27 http://nova.clouds.archive.ubuntu.com/ubuntu jammy-updates/universe Translation-en [326 kB]
+Get:28 http://nova.clouds.archive.ubuntu.com/ubuntu jammy-updates/universe amd64 c-n-f Metadata [30.8 kB]
+Get:29 http://nova.clouds.archive.ubuntu.com/ubuntu jammy-updates/multiverse amd64 Packages [86.1 kB]
+Get:30 http://nova.clouds.archive.ubuntu.com/ubuntu jammy-updates/multiverse Translation-en [16.6 kB]
+Get:31 http://nova.clouds.archive.ubuntu.com/ubuntu jammy-updates/multiverse amd64 c-n-f Metadata [756 B]
+Get:32 http://nova.clouds.archive.ubuntu.com/ubuntu jammy-backports/main amd64 Packages [70.2 kB]
+Get:33 http://nova.clouds.archive.ubuntu.com/ubuntu jammy-backports/main Translation-en [11.4 kB]
+Get:34 http://nova.clouds.archive.ubuntu.com/ubuntu jammy-backports/main amd64 c-n-f Metadata [412 B]
+Get:35 http://nova.clouds.archive.ubuntu.com/ubuntu jammy-backports/restricted amd64 c-n-f Metadata [116 B]
+Get:36 http://nova.clouds.archive.ubuntu.com/ubuntu jammy-backports/universe amd64 Packages [30.8 kB]
+Get:37 http://nova.clouds.archive.ubuntu.com/ubuntu jammy-backports/universe Translation-en [16.9 kB]
+Get:38 http://nova.clouds.archive.ubuntu.com/ubuntu jammy-backports/universe amd64 c-n-f Metadata [676 B]
+Get:39 http://nova.clouds.archive.ubuntu.com/ubuntu jammy-backports/multiverse amd64 c-n-f Metadata [116 B]
+Fetched 48.6 MB in 7s (7098 kB/s)
+Reading package lists...
+Reading package lists...
+Building dependency tree...
+Reading state information...
+python3-yaml is already the newest version (5.4.1-1ubuntu1).
+python3-yaml set to manually installed.
+ethtool is already the newest version (1:5.16-1ubuntu0.2).
+ethtool set to manually installed.
+gnupg is already the newest version (2.2.27-3ubuntu2.5).
+gnupg set to manually installed.
+iproute2 is already the newest version (5.15.0-1ubuntu2.2).
+iproute2 set to manually installed.
+iptables is already the newest version (1.8.7-1ubuntu5.2).
+iptables set to manually installed.
+iputils-ping is already the newest version (3:20211215-1ubuntu0.1).
+iputils-ping set to manually installed.
+python3 is already the newest version (3.10.6-1~22.04.1).
+python3 set to manually installed.
+tcpdump is already the newest version (4.99.1-3ubuntu0.2).
+tcpdump set to manually installed.
+The following additional packages will be installed:
+  libcurl4 libevent-2.1-7 libjq1 libonig5 libunbound8 openvswitch-common
+  python3-openvswitch python3-sortedcontainers runc vim-common vim-runtime
+  vim-tiny
+Suggested packages:
+  git-daemon-run | git-daemon-sysvinit git-doc git-email git-gui gitk gitweb
+  git-cvs git-mediawiki git-svn openvswitch-doc python-sortedcontainers-doc
+  ctags vim-doc vim-scripts indent
+The following NEW packages will be installed:
+  conntrack containerd ebtables jq libevent-2.1-7 libjq1 libonig5 libunbound8
+  openvswitch-common openvswitch-switch python3-openvswitch
+  python3-sortedcontainers python3-toml runc socat
+The following packages will be upgraded:
+  ca-certificates curl git libcurl4 tmux vim vim-common vim-runtime vim-tiny
+9 upgraded, 15 newly installed, 0 to remove and 128 not upgraded.
+Need to get 55.4 MB of archives.
+After this operation, 153 MB of additional disk space will be used.
+Get:1 http://nova.clouds.archive.ubuntu.com/ubuntu jammy-updates/main amd64 ca-certificates all 20260816ubuntu0.22.04.1 [140 kB]
+Get:2 http://nova.clouds.archive.ubuntu.com/ubuntu jammy-updates/main amd64 vim amd64 2:8.2.3995-1ubuntu2.36 [1733 kB]
+Get:3 http://nova.clouds.archive.ubuntu.com/ubuntu jammy-updates/main amd64 vim-tiny amd64 2:8.2.3995-1ubuntu2.36 [707 kB]
+Get:4 http://nova.clouds.archive.ubuntu.com/ubuntu jammy-updates/main amd64 vim-runtime all 2:8.2.3995-1ubuntu2.36 [6824 kB]
+Get:5 http://nova.clouds.archive.ubuntu.com/ubuntu jammy-updates/main amd64 vim-common all 2:8.2.3995-1ubuntu2.36 [81.5 kB]
+Get:6 http://nova.clouds.archive.ubuntu.com/ubuntu jammy/main amd64 conntrack amd64 1:1.4.6-2build2 [33.5 kB]
+Get:7 http://nova.clouds.archive.ubuntu.com/ubuntu jammy-updates/main amd64 runc amd64 1.3.4-0ubuntu1~22.04.1 [9569 kB]
+Get:8 http://nova.clouds.archive.ubuntu.com/ubuntu jammy-updates/main amd64 containerd amd64 2.2.1-0ubuntu1~22.04.2 [28.3 MB]
+Get:9 http://nova.clouds.archive.ubuntu.com/ubuntu jammy-updates/main amd64 curl amd64 7.81.0-1ubuntu1.30 [194 kB]
+Get:10 http://nova.clouds.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libcurl4 amd64 7.81.0-1ubuntu1.30 [293 kB]
+Get:11 http://nova.clouds.archive.ubuntu.com/ubuntu jammy/main amd64 ebtables amd64 2.0.11-4build2 [84.9 kB]
+Get:12 http://nova.clouds.archive.ubuntu.com/ubuntu jammy-updates/main amd64 git amd64 1:2.34.1-1ubuntu1.18 [3174 kB]
+Get:13 http://nova.clouds.archive.ubuntu.com/ubuntu jammy/main amd64 libonig5 amd64 6.9.7.1-2build1 [172 kB]
+Get:14 http://nova.clouds.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libjq1 amd64 1.6-2.1ubuntu3.2 [135 kB]
+Get:15 http://nova.clouds.archive.ubuntu.com/ubuntu jammy-updates/main amd64 jq amd64 1.6-2.1ubuntu3.2 [52.5 kB]
+Get:16 http://nova.clouds.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libevent-2.1-7 amd64 2.1.12-stable-1ubuntu0.2 [149 kB]
+Get:17 http://nova.clouds.archive.ubuntu.com/ubuntu jammy-updates/main amd64 libunbound8 amd64 1.13.1-1ubuntu5.17 [404 kB]
+Get:18 http://nova.clouds.archive.ubuntu.com/ubuntu jammy/main amd64 python3-sortedcontainers all 2.1.0-2 [27.3 kB]
+Get:19 http://nova.clouds.archive.ubuntu.com/ubuntu jammy/universe amd64 python3-toml all 0.10.2-1 [16.5 kB]
+Get:20 http://nova.clouds.archive.ubuntu.com/ubuntu jammy-updates/main amd64 tmux amd64 3.2a-4ubuntu0.3 [428 kB]
+Get:21 http://nova.clouds.archive.ubuntu.com/ubuntu jammy-updates/main amd64 openvswitch-common amd64 2.17.12-0ubuntu0.22.04.1 [935 kB]
+Get:22 http://nova.clouds.archive.ubuntu.com/ubuntu jammy-updates/main amd64 python3-openvswitch all 2.17.12-0ubuntu0.22.04.1 [100 kB]
+Get:23 http://nova.clouds.archive.ubuntu.com/ubuntu jammy-updates/main amd64 openvswitch-switch amd64 2.17.12-0ubuntu0.22.04.1 [1536 kB]
+Get:24 http://nova.clouds.archive.ubuntu.com/ubuntu jammy/main amd64 socat amd64 1.7.4.1-3ubuntu4 [349 kB]
+Preconfiguring packages ...
+Fetched 55.4 MB in 3s (16.0 MB/s)
+(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 64624 files and directories currently installed.)
+Preparing to unpack .../00-ca-certificates_20260816ubuntu0.22.04.1_all.deb ...
+Unpacking ca-certificates (20260816ubuntu0.22.04.1) over (20260601~22.04.1) ...
+Preparing to unpack .../01-vim_2%3a8.2.3995-1ubuntu2.36_amd64.deb ...
+Unpacking vim (2:8.2.3995-1ubuntu2.36) over (2:8.2.3995-1ubuntu2.33) ...
+Preparing to unpack .../02-vim-tiny_2%3a8.2.3995-1ubuntu2.36_amd64.deb ...
+Unpacking vim-tiny (2:8.2.3995-1ubuntu2.36) over (2:8.2.3995-1ubuntu2.33) ...
+Preparing to unpack .../03-vim-runtime_2%3a8.2.3995-1ubuntu2.36_all.deb ...
+Unpacking vim-runtime (2:8.2.3995-1ubuntu2.36) over (2:8.2.3995-1ubuntu2.33) ...
+Preparing to unpack .../04-vim-common_2%3a8.2.3995-1ubuntu2.36_all.deb ...
+Unpacking vim-common (2:8.2.3995-1ubuntu2.36) over (2:8.2.3995-1ubuntu2.33) ...
+Selecting previously unselected package conntrack.
+Preparing to unpack .../05-conntrack_1%3a1.4.6-2build2_amd64.deb ...
+Unpacking conntrack (1:1.4.6-2build2) ...
+Selecting previously unselected package runc.
+Preparing to unpack .../06-runc_1.3.4-0ubuntu1~22.04.1_amd64.deb ...
+Unpacking runc (1.3.4-0ubuntu1~22.04.1) ...
+Selecting previously unselected package containerd.
+Preparing to unpack .../07-containerd_2.2.1-0ubuntu1~22.04.2_amd64.deb ...
+Unpacking containerd (2.2.1-0ubuntu1~22.04.2) ...
+Preparing to unpack .../08-curl_7.81.0-1ubuntu1.30_amd64.deb ...
+Unpacking curl (7.81.0-1ubuntu1.30) over (7.81.0-1ubuntu1.25) ...
+Preparing to unpack .../09-libcurl4_7.81.0-1ubuntu1.30_amd64.deb ...
+Unpacking libcurl4:amd64 (7.81.0-1ubuntu1.30) over (7.81.0-1ubuntu1.25) ...
+Selecting previously unselected package ebtables.
+Preparing to unpack .../10-ebtables_2.0.11-4build2_amd64.deb ...
+Unpacking ebtables (2.0.11-4build2) ...
+Preparing to unpack .../11-git_1%3a2.34.1-1ubuntu1.18_amd64.deb ...
+Unpacking git (1:2.34.1-1ubuntu1.18) over (1:2.34.1-1ubuntu1.17) ...
+Selecting previously unselected package libonig5:amd64.
+Preparing to unpack .../12-libonig5_6.9.7.1-2build1_amd64.deb ...
+Unpacking libonig5:amd64 (6.9.7.1-2build1) ...
+Selecting previously unselected package libjq1:amd64.
+Preparing to unpack .../13-libjq1_1.6-2.1ubuntu3.2_amd64.deb ...
+Unpacking libjq1:amd64 (1.6-2.1ubuntu3.2) ...
+Selecting previously unselected package jq.
+Preparing to unpack .../14-jq_1.6-2.1ubuntu3.2_amd64.deb ...
+Unpacking jq (1.6-2.1ubuntu3.2) ...
+Selecting previously unselected package libevent-2.1-7:amd64.
+Preparing to unpack .../15-libevent-2.1-7_2.1.12-stable-1ubuntu0.2_amd64.deb ...
+Unpacking libevent-2.1-7:amd64 (2.1.12-stable-1ubuntu0.2) ...
+Selecting previously unselected package libunbound8:amd64.
+Preparing to unpack .../16-libunbound8_1.13.1-1ubuntu5.17_amd64.deb ...
+Unpacking libunbound8:amd64 (1.13.1-1ubuntu5.17) ...
+Selecting previously unselected package python3-sortedcontainers.
+Preparing to unpack .../17-python3-sortedcontainers_2.1.0-2_all.deb ...
+Unpacking python3-sortedcontainers (2.1.0-2) ...
+Selecting previously unselected package python3-toml.
+Preparing to unpack .../18-python3-toml_0.10.2-1_all.deb ...
+Unpacking python3-toml (0.10.2-1) ...
+Preparing to unpack .../19-tmux_3.2a-4ubuntu0.3_amd64.deb ...
+Unpacking tmux (3.2a-4ubuntu0.3) over (3.2a-4ubuntu0.2) ...
+Selecting previously unselected package openvswitch-common.
+Preparing to unpack .../20-openvswitch-common_2.17.12-0ubuntu0.22.04.1_amd64.deb ...
+Unpacking openvswitch-common (2.17.12-0ubuntu0.22.04.1) ...
+Selecting previously unselected package python3-openvswitch.
+Preparing to unpack .../21-python3-openvswitch_2.17.12-0ubuntu0.22.04.1_all.deb ...
+Unpacking python3-openvswitch (2.17.12-0ubuntu0.22.04.1) ...
+Selecting previously unselected package openvswitch-switch.
+Preparing to unpack .../22-openvswitch-switch_2.17.12-0ubuntu0.22.04.1_amd64.deb ...
+Unpacking openvswitch-switch (2.17.12-0ubuntu0.22.04.1) ...
+Selecting previously unselected package socat.
+Preparing to unpack .../23-socat_1.7.4.1-3ubuntu4_amd64.deb ...
+Unpacking socat (1.7.4.1-3ubuntu4) ...
+Setting up python3-sortedcontainers (2.1.0-2) ...
+Setting up python3-openvswitch (2.17.12-0ubuntu0.22.04.1) ...
+Setting up conntrack (1:1.4.6-2build2) ...
+Setting up runc (1.3.4-0ubuntu1~22.04.1) ...
+Setting up ca-certificates (20260816ubuntu0.22.04.1) ...
+Updating certificates in /etc/ssl/certs...
+rehash: warning: skipping ca-certificates.crt,it does not contain exactly one certificate or CRL
+4 added, 5 removed; done.
+Setting up vim-common (2:8.2.3995-1ubuntu2.36) ...
+Setting up ebtables (2.0.11-4build2) ...
+Setting up socat (1.7.4.1-3ubuntu4) ...
+Setting up libevent-2.1-7:amd64 (2.1.12-stable-1ubuntu0.2) ...
+Setting up git (1:2.34.1-1ubuntu1.18) ...
+Setting up python3-toml (0.10.2-1) ...
+Setting up libcurl4:amd64 (7.81.0-1ubuntu1.30) ...
+Setting up curl (7.81.0-1ubuntu1.30) ...
+Setting up vim-runtime (2:8.2.3995-1ubuntu2.36) ...
+Setting up containerd (2.2.1-0ubuntu1~22.04.2) ...
+Created symlink /etc/systemd/system/multi-user.target.wants/containerd.service → /lib/systemd/system/containerd.service.
+Setting up tmux (3.2a-4ubuntu0.3) ...
+Setting up libonig5:amd64 (6.9.7.1-2build1) ...
+Setting up vim (2:8.2.3995-1ubuntu2.36) ...
+Setting up libjq1:amd64 (1.6-2.1ubuntu3.2) ...
+Setting up vim-tiny (2:8.2.3995-1ubuntu2.36) ...
+Setting up libunbound8:amd64 (1.13.1-1ubuntu5.17) ...
+Setting up openvswitch-common (2.17.12-0ubuntu0.22.04.1) ...
+Setting up jq (1.6-2.1ubuntu3.2) ...
+Setting up openvswitch-switch (2.17.12-0ubuntu0.22.04.1) ...
+update-alternatives: using /usr/lib/openvswitch-switch/ovs-vswitchd to provide /usr/sbin/ovs-vswitchd (ovs-vswitchd) in auto mode
+Created symlink /etc/systemd/system/multi-user.target.wants/openvswitch-switch.service → /lib/systemd/system/openvswitch-switch.service.
+Created symlink /etc/systemd/system/openvswitch-switch.service.requires/ovs-record-hostname.service → /lib/systemd/system/ovs-record-hostname.service.
+Processing triggers for man-db (2.10.2-1) ...
+Processing triggers for libc-bin (2.35-0ubuntu3.13) ...
+Processing triggers for ca-certificates (20260816ubuntu0.22.04.1) ...
+Updating certificates in /etc/ssl/certs...
+0 added, 0 removed; done.
+Running hooks in /etc/ca-certificates/update.d...
+done.
+
+Running kernel seems to be up-to-date.
+
+No services need to be restarted.
+
+No containers need to be restarted.
+
+No user sessions are running outdated binaries.
+
+No VM guests are running outdated hypervisor (qemu) binaries on this host.
+Hit:2 http://nova.clouds.archive.ubuntu.com/ubuntu jammy InRelease
+Hit:3 http://nova.clouds.archive.ubuntu.com/ubuntu jammy-updates InRelease
+Hit:4 http://security.ubuntu.com/ubuntu jammy-security InRelease
+Get:1 https://prod-cdn.packages.k8s.io/repositories/isv:/kubernetes:/core:/stable:/v1.35/deb  InRelease [1230 B]
+Hit:5 http://nova.clouds.archive.ubuntu.com/ubuntu jammy-backports InRelease
+Get:6 https://prod-cdn.packages.k8s.io/repositories/isv:/kubernetes:/core:/stable:/v1.35/deb  Packages [15.2 kB]
+Fetched 16.4 kB in 1s (22.3 kB/s)
+Reading package lists...
+Reading package lists...
+Building dependency tree...
+Reading state information...
+The following additional packages will be installed:
+  kubernetes-cni
+The following NEW packages will be installed:
+  cri-tools kubeadm kubectl kubelet kubernetes-cni
+0 upgraded, 5 newly installed, 0 to remove and 128 not upgraded.
+Need to get 92.5 MB of archives.
+After this operation, 329 MB of additional disk space will be used.
+Get:1 https://prod-cdn.packages.k8s.io/repositories/isv:/kubernetes:/core:/stable:/v1.35/deb  cri-tools 1.35.0-1.1 [16.2 MB]
+Get:2 https://prod-cdn.packages.k8s.io/repositories/isv:/kubernetes:/core:/stable:/v1.35/deb  kubeadm 1.35.10-1.1 [12.5 MB]
+Get:3 https://prod-cdn.packages.k8s.io/repositories/isv:/kubernetes:/core:/stable:/v1.35/deb  kubectl 1.35.10-1.1 [11.7 MB]
+Get:4 https://prod-cdn.packages.k8s.io/repositories/isv:/kubernetes:/core:/stable:/v1.35/deb  kubernetes-cni 1.8.0-1.1 [38.9 MB]
+Get:5 https://prod-cdn.packages.k8s.io/repositories/isv:/kubernetes:/core:/stable:/v1.35/deb  kubelet 1.35.10-1.1 [13.1 MB]
+Fetched 92.5 MB in 2s (44.0 MB/s)
+Selecting previously unselected package cri-tools.
+(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 64945 files and directories currently installed.)
+Preparing to unpack .../cri-tools_1.35.0-1.1_amd64.deb ...
+Unpacking cri-tools (1.35.0-1.1) ...
+Selecting previously unselected package kubeadm.
+Preparing to unpack .../kubeadm_1.35.10-1.1_amd64.deb ...
+Unpacking kubeadm (1.35.10-1.1) ...
+Selecting previously unselected package kubectl.
+Preparing to unpack .../kubectl_1.35.10-1.1_amd64.deb ...
+Unpacking kubectl (1.35.10-1.1) ...
+Selecting previously unselected package kubernetes-cni.
+Preparing to unpack .../kubernetes-cni_1.8.0-1.1_amd64.deb ...
+Unpacking kubernetes-cni (1.8.0-1.1) ...
+Selecting previously unselected package kubelet.
+Preparing to unpack .../kubelet_1.35.10-1.1_amd64.deb ...
+Unpacking kubelet (1.35.10-1.1) ...
+Setting up kubeadm (1.35.10-1.1) ...
+Setting up kubectl (1.35.10-1.1) ...
+Setting up cri-tools (1.35.0-1.1) ...
+Setting up kubernetes-cni (1.8.0-1.1) ...
+Setting up kubelet (1.35.10-1.1) ...
+
+Running kernel seems to be up-to-date.
+
+No services need to be restarted.
+
+No containers need to be restarted.
+
+No user sessions are running outdated binaries.
+
+No VM guests are running outdated hypervisor (qemu) binaries on this host.
+kubeadm set on hold.
+kubelet set on hold.
+kubectl set on hold.
+
+[INFO] Host configuration backups: /var/backups/testbed-automator/20261103T122422Z
+
+[INFO] Rendering kubeadm configuration from the current interface addresses.
+ok
+
+[INFO] Preparing pinned CNI manifests; enabling both IP families in Flannel.
+
+[INFO] Preserving IPv6 router advertisements before enabling forwarding.
+net.ipv6.conf.enp3s0.accept_ra = 2
+net.ipv6.conf.enp3s0.accept_ra_defrtr = 1
+net.ipv4.ip_forward = 1
+net.ipv6.conf.all.forwarding = 1
+net.ipv6.conf.default.forwarding = 1
+net.bridge.bridge-nf-call-iptables = 1
+net.bridge.bridge-nf-call-ip6tables = 1
+fs.inotify.max_user_instances = 8192
+fs.inotify.max_user_watches = 524288
+
+[INFO] Configuring containerd CRI with systemd cgroups.
+
+[INFO] Detected runtime: containerd github.com/containerd/containerd/v2 2.2.1 
+Containerd schema 3: systemd cgroups enabled; sandbox image registry.k8s.io/pause:3.10.1
+time="2026-11-03T12:24:25Z" level=warning msg="Config \"/etc/crictl.yaml\" does not exist, trying next: \"/usr/bin/crictl.yaml\""
+Containerd CRI RuntimeReady verified.
+Synchronizing state of openvswitch-switch.service with SysV service script with /lib/systemd/systemd-sysv-install.
+Executing: /lib/systemd/systemd-sysv-install enable openvswitch-switch
+
+[INFO] Pulling Kubernetes and addon images before initializing the cluster.
+[config/images] Pulled registry.k8s.io/kube-apiserver:v1.35.10
+[config/images] Pulled registry.k8s.io/kube-controller-manager:v1.35.10
+[config/images] Pulled registry.k8s.io/kube-scheduler:v1.35.10
+[config/images] Pulled registry.k8s.io/kube-proxy:v1.35.10
+[config/images] Pulled registry.k8s.io/coredns/coredns:v1.13.1
+[config/images] Pulled registry.k8s.io/pause:3.10.1
+[config/images] Pulled registry.k8s.io/etcd:3.6.6-0
+
+[INFO] Pulling docker.io/curlimages/curl:8.12.1
+time="2026-11-03T12:24:35Z" level=warning msg="Config \"/etc/crictl.yaml\" does not exist, trying next: \"/usr/bin/crictl.yaml\""
+Image is up to date for sha256:5dce198cca467ce79994ed65e01d03882238f9efdd16a8c6f4bc55151c8a4a54
+
+[INFO] Pulling docker.io/openebs/linux-utils:4.1.0
+time="2026-11-03T12:24:39Z" level=warning msg="Config \"/etc/crictl.yaml\" does not exist, trying next: \"/usr/bin/crictl.yaml\""
+Image is up to date for sha256:0df06a59dfca5cc99f138528a27f1cf84589014b4d7e91f707707c46a533cc01
+
+[INFO] Pulling ghcr.io/flannel-io/flannel-cni-plugin:v1.9.1-flannel2
+time="2026-11-03T12:24:43Z" level=warning msg="Config \"/etc/crictl.yaml\" does not exist, trying next: \"/usr/bin/crictl.yaml\""
+Image is up to date for sha256:501510e7575af1fe71a881942a791f585495a6099d33005ae9ae4540b48e837e
+
+[INFO] Pulling ghcr.io/flannel-io/flannel:v0.28.6
+time="2026-11-03T12:24:45Z" level=warning msg="Config \"/etc/crictl.yaml\" does not exist, trying next: \"/usr/bin/crictl.yaml\""
+Image is up to date for sha256:a29f51289ee112ef81d503b33041ad352d9ee13fc154225e3587b8837db9e2db
+
+[INFO] Pulling ghcr.io/k8snetworkplumbingwg/multus-cni:v4.3.0
+time="2026-11-03T12:24:48Z" level=warning msg="Config \"/etc/crictl.yaml\" does not exist, trying next: \"/usr/bin/crictl.yaml\""
+Image is up to date for sha256:a982ee781971d07c3a4fb40027045479082a70c1dfb9db9250d2d22ec428fada
+
+[INFO] Pulling ghcr.io/k8snetworkplumbingwg/ovs-cni-plugin:v0.40.0
+time="2026-11-03T12:24:57Z" level=warning msg="Config \"/etc/crictl.yaml\" does not exist, trying next: \"/usr/bin/crictl.yaml\""
+Image is up to date for sha256:7cdebabaa6e588b1a2b48d238574c85f601e3e71a79753f1ed095d19a06f86a2
+
+[INFO] Pulling openebs/provisioner-localpv:4.2.0
+time="2026-11-03T12:25:01Z" level=warning msg="Config \"/etc/crictl.yaml\" does not exist, trying next: \"/usr/bin/crictl.yaml\""
+Image is up to date for sha256:3d665305ed25be1839d9a01c33d736047a9066b94ae67cad217403fd5a56599e
+[init] Using Kubernetes version: v1.35.10
+[preflight] Running pre-flight checks
+[preflight] Pulling images required for setting up a Kubernetes cluster
+[preflight] This might take a minute or two, depending on the speed of your internet connection
+[preflight] You can also perform this action beforehand using 'kubeadm config images pull'
+[certs] Using certificateDir folder "/etc/kubernetes/pki"
+[certs] Generating "ca" certificate and key
+[certs] Generating "apiserver" certificate and key
+[certs] apiserver serving cert is signed for DNS names [kubernetes kubernetes.default kubernetes.default.svc kubernetes.default.svc.cluster.local localhost vm1] and IPs [10.96.0.1 10.30.6.79 127.0.0.1 ::1 2001:48d0:6031:1991:f816:3eff:fecd:5bec]
+[certs] Generating "apiserver-kubelet-client" certificate and key
+[certs] Generating "front-proxy-ca" certificate and key
+[certs] Generating "front-proxy-client" certificate and key
+[certs] Generating "etcd/ca" certificate and key
+[certs] Generating "etcd/server" certificate and key
+[certs] etcd/server serving cert is signed for DNS names [localhost vm1] and IPs [10.30.6.79 127.0.0.1 ::1]
+[certs] Generating "etcd/peer" certificate and key
+[certs] etcd/peer serving cert is signed for DNS names [localhost vm1] and IPs [10.30.6.79 127.0.0.1 ::1]
+[certs] Generating "etcd/healthcheck-client" certificate and key
+[certs] Generating "apiserver-etcd-client" certificate and key
+[certs] Generating "sa" key and public key
+[kubeconfig] Using kubeconfig folder "/etc/kubernetes"
+[kubeconfig] Writing "admin.conf" kubeconfig file
+[kubeconfig] Writing "super-admin.conf" kubeconfig file
+[kubeconfig] Writing "kubelet.conf" kubeconfig file
+[kubeconfig] Writing "controller-manager.conf" kubeconfig file
+[kubeconfig] Writing "scheduler.conf" kubeconfig file
+[etcd] Creating static Pod manifest for local etcd in "/etc/kubernetes/manifests"
+[control-plane] Using manifest folder "/etc/kubernetes/manifests"
+[control-plane] Creating static Pod manifest for "kube-apiserver"
+[control-plane] Creating static Pod manifest for "kube-controller-manager"
+[control-plane] Creating static Pod manifest for "kube-scheduler"
+[kubelet-start] Writing kubelet environment file with flags to file "/var/lib/kubelet/kubeadm-flags.env"
+[kubelet-start] Writing kubelet configuration to file "/var/lib/kubelet/instance-config.yaml"
+[patches] Applied patch of type "application/strategic-merge-patch+json" to target "kubeletconfiguration"
+[kubelet-start] Writing kubelet configuration to file "/var/lib/kubelet/config.yaml"
+[kubelet-start] Starting the kubelet
+[wait-control-plane] Waiting for the kubelet to boot up the control plane as static Pods from directory "/etc/kubernetes/manifests"
+[kubelet-check] Waiting for a healthy kubelet at http://127.0.0.1:10248/healthz. This can take up to 4m0s
+[kubelet-check] The kubelet is healthy after 591.726µs
+[control-plane-check] Waiting for healthy control plane components. This can take up to 4m0s
+[control-plane-check] Checking kube-apiserver at https://10.30.6.79:6443/livez
+[control-plane-check] Checking kube-controller-manager at https://127.0.0.1:10257/healthz
+[control-plane-check] Checking kube-scheduler at https://127.0.0.1:10259/livez
+[control-plane-check] kube-controller-manager is healthy after 3.728897ms
+[control-plane-check] kube-scheduler is healthy after 4.226996ms
+[control-plane-check] kube-apiserver is healthy after 1.5016507s
+[upload-config] Storing the configuration used in ConfigMap "kubeadm-config" in the "kube-system" Namespace
+[kubelet] Creating a ConfigMap "kubelet-config" in namespace kube-system with the configuration for the kubelets in the cluster
+[upload-certs] Skipping phase. Please see --upload-certs
+[mark-control-plane] Marking the node vm1 as control-plane by adding the labels: [node-role.kubernetes.io/control-plane node.kubernetes.io/exclude-from-external-load-balancers]
+[mark-control-plane] Marking the node vm1 as control-plane by adding the taints [node-role.kubernetes.io/control-plane:NoSchedule]
+[bootstrap-token] Using token: olbaz7.v5psudlum335ayk6
+[bootstrap-token] Configuring bootstrap tokens, cluster-info ConfigMap, RBAC Roles
+[bootstrap-token] Configured RBAC rules to allow Node Bootstrap tokens to get nodes
+[bootstrap-token] Configured RBAC rules to allow Node Bootstrap tokens to post CSRs in order for nodes to get long term certificate credentials
+[bootstrap-token] Configured RBAC rules to allow the csrapprover controller automatically approve CSRs from a Node Bootstrap Token
+[bootstrap-token] Configured RBAC rules to allow certificate rotation for all node client certificates in the cluster
+[bootstrap-token] Configured RBAC rules to allow the API server kubelet client certificate to access the kubelet API
+[bootstrap-token] Creating the "cluster-info" ConfigMap in the "kube-public" namespace
+[kubelet-finalize] Updating "/etc/kubernetes/kubelet.conf" to point to a rotatable kubelet client certificate and key
+[addons] Applied essential addon: CoreDNS
+[addons] Applied essential addon: kube-proxy
+
+Your Kubernetes control-plane has initialized successfully!
+
+To start using your cluster, you need to run the following as a regular user:
+
+  mkdir -p $HOME/.kube
+  sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+  sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+Alternatively, if you are the root user, you can run:
+
+  export KUBECONFIG=/etc/kubernetes/admin.conf
+
+You should now deploy a pod network to the cluster.
+Run "kubectl apply -f [podnetwork].yaml" with one of the options listed at:
+  https://kubernetes.io/docs/concepts/cluster-administration/addons/
+
+You can now join any number of control-plane nodes by copying certificate authorities
+and service account keys on each node and then running the following as root:
+
+  kubeadm join 10.30.6.79:6443 --token olbaz7.v5psudlum335ayk6 \
+	--discovery-token-ca-cert-hash sha256:5be329f5c4dcd970a28ce62f26c708e2456835c9ce57d5c8c6704680da74ec06 \
+	--control-plane 
+
+Then you can join any number of worker nodes by running the following on each as root:
+
+kubeadm join 10.30.6.79:6443 --token olbaz7.v5psudlum335ayk6 \
+	--discovery-token-ca-cert-hash sha256:5be329f5c4dcd970a28ce62f26c708e2456835c9ce57d5c8c6704680da74ec06 
+node/vm1 untainted
+
+[INFO] Installing Flannel, Multus and OVS CNI.
+namespace/kube-flannel created
+clusterrole.rbac.authorization.k8s.io/flannel created
+clusterrolebinding.rbac.authorization.k8s.io/flannel created
+serviceaccount/flannel created
+configmap/kube-flannel-cfg created
+daemonset.apps/kube-flannel-ds created
+Waiting for daemon set spec update to be observed...
+Waiting for daemon set "kube-flannel-ds" rollout to finish: 0 out of 1 new pods have been updated...
+Waiting for daemon set "kube-flannel-ds" rollout to finish: 0 of 1 updated pods are available...
+daemon set "kube-flannel-ds" successfully rolled out
+node/vm1 condition met
+Waiting for deployment "coredns" rollout to finish: 0 of 2 updated replicas are available...
+Waiting for deployment "coredns" rollout to finish: 1 of 2 updated replicas are available...
+deployment "coredns" successfully rolled out
+customresourcedefinition.apiextensions.k8s.io/network-attachment-definitions.k8s.cni.cncf.io created
+clusterrole.rbac.authorization.k8s.io/multus created
+clusterrolebinding.rbac.authorization.k8s.io/multus created
+serviceaccount/multus created
+configmap/multus-cni-config created
+daemonset.apps/kube-multus-ds created
+customresourcedefinition.apiextensions.k8s.io/network-attachment-definitions.k8s.cni.cncf.io condition met
+Waiting for daemon set "kube-multus-ds" rollout to finish: 0 of 1 updated pods are available...
+daemon set "kube-multus-ds" successfully rolled out
+daemonset.apps/ovs-cni-amd64 created
+clusterrole.rbac.authorization.k8s.io/ovs-cni-marker-cr created
+clusterrolebinding.rbac.authorization.k8s.io/ovs-cni-marker-crb created
+serviceaccount/ovs-cni-marker created
+Waiting for daemon set "ovs-cni-amd64" rollout to finish: 0 of 1 updated pods are available...
+daemon set "ovs-cni-amd64" successfully rolled out
+
+[INFO] Installing OpenEBS LocalPV Hostpath.
+Release "openebs" does not exist. Installing it now.
+NAME: openebs
+LAST DEPLOYED: Tue Nov  3 12:27:39 2026
+NAMESPACE: openebs
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+NOTES:
+The OpenEBS Dynamic LocalPV Provisioner has been installed.
+Check its status by running:
+$ kubectl get pods -n openebs
+
+Get started with the Dynamic LocalPV Provisioner Quickstart guide at:
+https://github.com/openebs/dynamic-localpv-provisioner/blob/develop/docs/quickstart.md
+
+For more information, visit our Slack at https://kubernetes.slack.com/messages/openebs or view 
+the OpenEBS documentation online at https://openebs.io/docs
+NAME                         PROVISIONER        RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
+openebs-hostpath (default)   openebs.io/local   Delete          WaitForFirstConsumer   false                  2s
+NAME   STATUS   ROLES           AGE     VERSION    INTERNAL-IP   EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION       CONTAINER-RUNTIME
+vm1    Ready    control-plane   2m32s   v1.35.10   10.30.6.79    <none>        Ubuntu 22.04.5 LTS   5.15.0-185-generic   containerd://2.2.1
+NAMESPACE      NAME                                           READY   STATUS    RESTARTS   AGE     IP           NODE   NOMINATED NODE   READINESS GATES
+kube-flannel   kube-flannel-ds-nt4tf                          1/1     Running   0          2m23s   10.30.6.79   vm1    <none>           <none>
+kube-system    coredns-7d764666f9-49b7w                       1/1     Running   0          2m23s   10.244.0.3   vm1    <none>           <none>
+kube-system    coredns-7d764666f9-tnbdp                       1/1     Running   0          2m23s   10.244.0.2   vm1    <none>           <none>
+kube-system    etcd-vm1                                       1/1     Running   0          2m31s   10.30.6.79   vm1    <none>           <none>
+kube-system    kube-apiserver-vm1                             1/1     Running   0          2m31s   10.30.6.79   vm1    <none>           <none>
+kube-system    kube-controller-manager-vm1                    1/1     Running   0          2m31s   10.30.6.79   vm1    <none>           <none>
+kube-system    kube-multus-ds-v85jk                           1/1     Running   0          2m4s    10.30.6.79   vm1    <none>           <none>
+kube-system    kube-proxy-7s7z9                               1/1     Running   0          2m23s   10.30.6.79   vm1    <none>           <none>
+kube-system    kube-scheduler-vm1                             1/1     Running   0          2m31s   10.30.6.79   vm1    <none>           <none>
+kube-system    ovs-cni-amd64-vvmck                            1/1     Running   0          2m2s    10.30.6.79   vm1    <none>           <none>
+openebs        openebs-localpv-provisioner-5887956dc4-6gqtc   1/1     Running   0          2s      10.244.0.4   vm1    <none>           <none>
+n2br
+n3br
+n4br
+
+[INFO] Testing dual-stack Pod creation, Multus/OVS, DNS, IPv6 egress and a PVC.
+namespace/testbed-install-check created
+networkattachmentdefinition.k8s.cni.cncf.io/check-n2 created
+persistentvolumeclaim/check-volume created
+pod/check-pod created
+pod/check-pod condition met
+Pod addresses: 10.244.0.6, fd5c:50a5:7e57:100::6
+Secondary OVS interface verified.
+storage-ok
+namespace "testbed-install-check" deleted
+
+[INFO] Installation and functional smoke checks completed successfully.
+IPv6 default route:
+default via fe80::f816:3eff:fe1a:5e6b dev enp3s0 proto ra metric 100 expires 282sec mtu 9000 pref medium
+default via fe80::f816:3eff:fe1a:5e6b dev enp3s0 proto ra metric 1024 expires 282sec hoplimit 64 pref medium
+
+The IPv4 API endpoint is internal to this VM/network: https://10.30.6.79:6443
+The API certificate also includes the node IPv6: 2001:48d0:6031:1991:f816:3eff:fecd:5bec
+Logs and generated configuration: /home/ubuntu/PCS5870-STD-Infra-Energy-Monitoring/build

@@ -1,0 +1,144 @@
+{
+  "cniconfig": {
+    "Networks": [
+      {
+        "Config": {
+          "CNIVersion": "0.3.1",
+          "Name": "cni-loopback",
+          "Plugins": [
+            {
+              "Network": {
+                "ipam": {},
+                "type": "loopback"
+              },
+              "Source": "{\"type\":\"loopback\"}"
+            }
+          ],
+          "Source": "{\n\"cniVersion\": \"0.3.1\",\n\"name\": \"cni-loopback\",\n\"plugins\": [{\n  \"type\": \"loopback\"\n}]\n}"
+        },
+        "IFName": "lo"
+      }
+    ],
+    "PluginConfDir": "/etc/cni/net.d",
+    "PluginDirs": [
+      "/opt/cni/bin"
+    ],
+    "PluginMaxConfNum": 1,
+    "Prefix": "eth"
+  },
+  "config": {
+    "cdiSpecDirs": [
+      "/etc/cdi",
+      "/var/run/cdi"
+    ],
+    "cni": {
+      "binDir": "",
+      "binDirs": [
+        "/opt/cni/bin"
+      ],
+      "confDir": "/etc/cni/net.d",
+      "confTemplate": "",
+      "ipPref": "",
+      "maxConfNum": 1,
+      "setupSerially": false,
+      "useInternalLoopback": false
+    },
+    "containerd": {
+      "defaultRuntimeName": "runc",
+      "ignoreBlockIONotEnabledErrors": false,
+      "ignoreRdtNotEnabledErrors": false,
+      "runtimes": {
+        "runc": {
+          "ContainerAnnotations": [],
+          "PodAnnotations": [],
+          "baseRuntimeSpec": "",
+          "cgroupWritable": false,
+          "cniConfDir": "",
+          "cniMaxConfNum": 0,
+          "io_type": "",
+          "options": {
+            "BinaryName": "",
+            "CriuImagePath": "",
+            "CriuWorkPath": "",
+            "IoGid": 0,
+            "IoUid": 0,
+            "NoNewKeyring": false,
+            "Root": "",
+            "ShimCgroup": "",
+            "SystemdCgroup": true
+          },
+          "privileged_without_host_devices": false,
+          "privileged_without_host_devices_all_devices_allowed": false,
+          "runtimePath": "",
+          "runtimeType": "io.containerd.runc.v2",
+          "sandboxer": "podsandbox",
+          "snapshotter": ""
+        }
+      }
+    },
+    "containerdEndpoint": "/run/containerd/containerd.sock",
+    "containerdRootDir": "/var/lib/containerd",
+    "device_ownership_from_security_context": false,
+    "disableApparmor": false,
+    "disableHugetlbController": true,
+    "disableProcMount": false,
+    "drainExecSyncIOTimeout": "0s",
+    "enableCDI": true,
+    "enableSelinux": false,
+    "enableUnprivilegedICMP": true,
+    "enableUnprivilegedPorts": true,
+    "ignoreDeprecationWarnings": [],
+    "ignoreImageDefinedVolumes": false,
+    "maxContainerLogLineSize": 16384,
+    "netnsMountsUnderStateDir": false,
+    "restrictOOMScoreAdj": false,
+    "rootDir": "/var/lib/containerd/io.containerd.grpc.v1.cri",
+    "selinuxCategoryRange": 1024,
+    "stateDir": "/run/containerd/io.containerd.grpc.v1.cri",
+    "tolerateMissingHugetlbController": true,
+    "unsetSeccompProfile": ""
+  },
+  "features": {
+    "supplemental_groups_policy": true
+  },
+  "golang": "go1.24.4",
+  "lastCNILoadStatus": "cni config load failed: no network config found in /etc/cni/net.d: cni plugin not initialized: failed to load cni config",
+  "lastCNILoadStatus.default": "cni config load failed: no network config found in /etc/cni/net.d: cni plugin not initialized: failed to load cni config",
+  "runtimeHandlers": [
+    {
+      "features": {
+        "recursive_read_only_mounts": true,
+        "user_namespaces": true
+      }
+    },
+    {
+      "features": {
+        "recursive_read_only_mounts": true,
+        "user_namespaces": true
+      },
+      "name": "runc"
+    }
+  ],
+  "status": {
+    "conditions": [
+      {
+        "message": "",
+        "reason": "",
+        "status": true,
+        "type": "RuntimeReady"
+      },
+      {
+        "message": "Network plugin returns error: cni plugin not initialized",
+        "reason": "NetworkPluginNotReady",
+        "status": false,
+        "type": "NetworkReady"
+      },
+      {
+        "message": "",
+        "reason": "",
+        "status": true,
+        "type": "ContainerdHasNoDeprecationWarnings"
+      }
+    ]
+  }
+}

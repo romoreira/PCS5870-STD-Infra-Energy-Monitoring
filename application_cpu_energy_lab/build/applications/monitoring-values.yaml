@@ -77,7 +77,7 @@ grafana:
       memory: 512Mi
   grafana.ini:
     server:
-      root_url: http://[2001:48d0:6031:1991:f816:3eff:fee2:e44a]:30000/
+      root_url: http://[2001:48d0:6031:1991:f816:3eff:fecd:5bec]:30000/
     users:
       allow_sign_up: false
     auth.anonymous:

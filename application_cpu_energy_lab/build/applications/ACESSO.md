@@ -4,8 +4,8 @@ Abra diretamente no navegador de um computador com conectividade IPv6:
 
 | Aplicação | URL |
 |---|---|
-| Grafana | http://[2001:48d0:6031:1991:f816:3eff:fee2:e44a]:30000/d/cpu-energy-lab |
-| Chaos Mesh | http://[2001:48d0:6031:1991:f816:3eff:fee2:e44a]:30001 |
+| Grafana | http://[2001:48d0:6031:1991:f816:3eff:fecd:5bec]:30000/d/cpu-energy-lab |
+| Chaos Mesh | http://[2001:48d0:6031:1991:f816:3eff:fecd:5bec]:30001 |
 
 Grafana usa NodePort TCP **30000**; Chaos Dashboard usa **30001**, ambos dual-stack.
 Autorize essas portas no grupo de segurança da nuvem e no firewall da VM somente
@@ -19,7 +19,7 @@ Na VM: `./application_access.sh` (neste diretório). Mantenha aberto.
 No computador com navegador, abra outro terminal e conecte por SSH:
 
 ```bash
-ssh -N -L 3000:127.0.0.1:3000 -L 2333:127.0.0.1:2333 -L 9090:127.0.0.1:9090 ubuntu@2001:48d0:6031:1991:f816:3eff:fee2:e44a
+ssh -N -L 3000:127.0.0.1:3000 -L 2333:127.0.0.1:2333 -L 9090:127.0.0.1:9090 ubuntu@2001:48d0:6031:1991:f816:3eff:fecd:5bec
 ```
 
 Acrescente as opções de chave/bastion que você já usa para entrar nesta VM.
