@@ -430,6 +430,16 @@ def generate(root, state):
                       {'kind': 'ServiceAccount', 'name': 'chaos-controller-manager', 'namespace': 'chaos-mesh'}],
          'roleRef': {'apiGroup': 'rbac.authorization.k8s.io', 'kind': 'ClusterRole',
                      'name': 'default-chaos-namespace-reader'}},
+        {'apiVersion': 'rbac.authorization.k8s.io/v1', 'kind': 'ClusterRole',
+         'metadata': {'name': 'chaos-mesh-remoteclusters-reader'},
+         'rules': [{'apiGroups': ['chaos-mesh.org'], 'resources': ['remoteclusters'],
+                    'verbs': ['list', 'watch']}]},
+        {'apiVersion': 'rbac.authorization.k8s.io/v1', 'kind': 'ClusterRoleBinding',
+         'metadata': {'name': 'chaos-mesh-remoteclusters-reader'},
+         'subjects': [{'kind': 'ServiceAccount', 'name': 'chaos-controller-manager',
+                       'namespace': 'chaos-mesh'}],
+         'roleRef': {'apiGroup': 'rbac.authorization.k8s.io', 'kind': 'ClusterRole',
+                     'name': 'chaos-mesh-remoteclusters-reader'}},
     ]
     (root / 'chaos-access-rbac.yaml').write_text(yaml.safe_dump_all(rbac, sort_keys=False))
     description = (
@@ -623,6 +633,13 @@ O limite de 4 CPUs protege a capacidade restante da VM de 8 vCPUs. Três workers
 aproximadamente 2,4 núcleos de carga, sujeitos ao escalonamento e às outras aplicações.
 O gráfico usa taxa de 1 minuto; a curva sobe e desce gradualmente.
 
+### Validação da instalação
+
+No primeiro teste, use o nome `cpu-validacao-60s`, 1 worker, load 80 e duração `60s`.
+No detalhe do experimento, confira os eventos `Applied` e `Recovered` para o container
+`ubuntu-test`. O intervalo entre esses eventos deve ser de cerca de 60 segundos.
+A taxa de 1 minuto no Grafana ainda inclui amostras da carga após a recuperação.
+
 ## Energia
 
 {description}
@@ -804,7 +821,7 @@ install_applications() {
   if [[ "$ENERGY_BACKEND" == estimated ]]; then
     install_release kepler-estimated kepler-estimated kepler-estimated.tgz kepler-estimated-values.yaml 'kepler-0.6.2'
   fi
-  # The namespace filter needs read-only Namespace access during controller startup.
+  # Grant Namespace reads and RemoteCluster list/watch before the Chaos Mesh controller starts.
   kubectl apply -f "$BUILD_DIR/chaos-access-rbac.yaml"
   install_release chaos-mesh chaos-mesh chaos.tgz chaos-values.yaml "chaos-mesh-${CHAOS_VERSION}"
   kubectl wait --for=condition=Established crd/stresschaos.chaos-mesh.org --timeout=120s
@@ -1177,4 +1194,3 @@ main() {
 }
 
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then main "$@"; fi
-
